@@ -132,7 +132,7 @@ async function initEdit() {
 
   try {
     const item = await apiGetJson(`${API}/${encodeURIComponent(id)}`);
-    if ($('ProductID')) $('ProductID').value = item.ProductID ?? item.productid ?? item.Productid ?? '';
+    if ($('ProductID')) $('ProductID').value = item.productID ?? item.ProductID ?? item.productid ?? item.Productid ?? '';
     if ($('Quantity')) $('Quantity').value = item.Quantity ?? item.quantity ?? item.Quantity ?? '';
 
     setMsg('pageMsg', '');
@@ -156,6 +156,8 @@ function buildBodyFromForm() {
   const body = {};
   body['ProductID'] = $('ProductID').value || null;
   body['Quantity'] = Number($('Quantity').value || 0);
+  const cost = $('AddedUnitCost')?.value;
+  body['AddedUnitCost'] = cost === '' || cost == null ? null : Number(cost);
   return body;
 }
 

@@ -2,6 +2,8 @@ function buildBodyFromForm() {
   const body = {};
   body['ProductID'] = $('ProductID').value || null;
   body['Quantity'] = Number($('Quantity').value || 0);
+  const cost = $('AddedUnitCost')?.value;
+  body['AddedUnitCost'] = cost === '' || cost == null ? null : Number(cost);
   return body;
 }
 

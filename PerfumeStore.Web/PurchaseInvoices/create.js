@@ -11,6 +11,9 @@ function buildBodyFromForm() {
   body['Products'] = Object.fromEntries(
     (window._items || []).map(x => [x.productId, x.qty])
   );
+  body['UnitCosts'] = Object.fromEntries(
+    (window._items || []).filter(x => x.unitPrice !== null).map(x => [x.productId, x.unitPrice])
+  );
   return body;
 }
 
@@ -183,6 +186,7 @@ async function fillProductsToElement(selectEl) {
     if (id === "") return;
     const opt = document.createElement("option");
     opt.value = id;
+    opt.dataset.unitPrice = String(p.costPrice ?? p.CostPrice ?? 0);
     opt.textContent = name;
     selectEl.appendChild(opt);
   });
@@ -208,7 +212,8 @@ function setupInvoiceItems() {
   addItemRow();
 }
 
-function addItemRow() {
+async function addItemRow() {
+  const initialDataForPrice = undefined;
   const rows = $("itemsRows");
   if (!rows) return;
   const idx = rows.querySelectorAll('tr').length + 1;
@@ -217,6 +222,7 @@ function addItemRow() {
     <td>${idx}</td>
     <td><select class="search-input" data-role="product"></select></td>
     <td><input class="search-input" type="number" min="1" value="1" data-role="qty" /></td>
+    <td><input class="search-input" type="number" min="0" step="0.01" data-role="price" aria-label="Unit cost" placeholder="Unit cost" /></td>
     <td style="text-align:right;">
       <button type="button" class="btn-light" data-role="remove">Remove</button>
     </td>
@@ -224,7 +230,7 @@ function addItemRow() {
   rows.appendChild(tr);
 
   const productSel = tr.querySelector('select[data-role="product"]');
-  fillProductsToElement(productSel);
+  await fillProductsToElement(productSel);
 
   tr.querySelector('[data-role="remove"]').addEventListener('click', () => {
     tr.remove();
@@ -232,7 +238,15 @@ function addItemRow() {
   });
 
   tr.querySelector('[data-role="qty"]').addEventListener('input', rebuildItemsFromUI);
-  productSel.addEventListener('change', rebuildItemsFromUI);
+  const priceInput = tr.querySelector('[data-role="price"]');
+  if (initialDataForPrice !== undefined && initialDataForPrice !== null) {
+    priceInput.value = String(initialDataForPrice);
+  }
+  priceInput.addEventListener('input', rebuildItemsFromUI);
+  productSel.addEventListener('change', () => {
+    priceInput.value = productSel.selectedOptions[0]?.dataset.unitPrice ?? '';
+    rebuildItemsFromUI();
+  });
 
   rebuildItemsFromUI();
 }
@@ -244,7 +258,9 @@ function rebuildItemsFromUI() {
   rows.querySelectorAll('tr').forEach(tr => {
     const pid = tr.querySelector('select[data-role="product"]')?.value || "";
     const qty = Number(tr.querySelector('input[data-role="qty"]')?.value || 0);
-    if (pid && qty > 0) items.push({ productId: Number(pid), qty });
+    const priceValue = tr.querySelector('[data-role="price"]')?.value ?? '';
+    const unitPrice = priceValue === '' ? null : Number(priceValue);
+    if (pid && qty > 0) items.push({ productId: Number(pid), qty, unitPrice });
   });
   window._items = items;
   const msg = $("itemsMsg");

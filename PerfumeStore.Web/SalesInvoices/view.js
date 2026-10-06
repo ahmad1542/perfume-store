@@ -28,7 +28,7 @@ async function loadView() {
       const products = item.products ?? item.Products ?? [];
 
       if (!Array.isArray(products) || products.length === 0) {
-        rows.innerHTML = `<tr><td colspan="3">No products found.</td></tr>`;
+        rows.innerHTML = `<tr><td colspan="7">No products found.</td></tr>`;
       } else {
         products.forEach((p, index) => {
           const tr = document.createElement('tr');
@@ -36,6 +36,10 @@ async function loadView() {
             <td>${index + 1}</td>
             <td>${escapeHtml(p.productName ?? p.ProductName ?? p.productID ?? p.ProductID ?? '-')}</td>
             <td>${escapeHtml(p.quantity ?? p.Quantity ?? 0)}</td>
+            <td>${escapeHtml(p.unitPrice ?? p.UnitPrice ?? 'Unknown')}${(p.isPriceEstimated ?? p.IsPriceEstimated) ? ' (estimated)' : ''}</td>
+            <td>${escapeHtml(p.lineTotal ?? p.LineTotal ?? 'Unknown')}</td>
+            <td>${escapeHtml(p.costTotal ?? p.CostTotal ?? 'Unknown')}${(p.isCostEstimated ?? p.IsCostEstimated) ? ' (estimated)' : ''}</td>
+            <td>${escapeHtml(p.grossProfit ?? p.GrossProfit ?? 'Unknown')}</td>
           `;
           rows.appendChild(tr);
         });
