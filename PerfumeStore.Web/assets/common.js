@@ -33,7 +33,10 @@ async function apiGetJson(url) {
     const res = await fetch(url, {
         headers: { Accept: "application/json" }
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status} - ${errText}`);
+    }
     return await res.json();
 }
 
@@ -89,8 +92,8 @@ function getValidationMessageFromHttpError(err) {
         }
 
         // fallback
-        if (problem?.title) return problem.title;
         if (problem?.detail) return problem.detail;
+        if (problem?.title) return problem.title;
 
         return null;
     } catch {

@@ -19,12 +19,12 @@ namespace PerfumeStore.Application.SalesInvoices.Commands.CreateSalesInvoice {
 
             if (request.AmountPaid > 0) {
                 if (!request.MoneyAccountId.HasValue)
-                    throw new Exception("Money account is required when amount is paid.");
+                    throw new BusinessRuleException("Money account is required when amount is paid.");
 
                 account = await moneyAccountsRepository.GetByIdAsync(request.MoneyAccountId.Value);
 
                 if (account == null)
-                    throw new Exception("Invalid money account.");
+                    throw new NotFoundException(nameof(MoneyAccount), request.MoneyAccountId.Value.ToString());
             }
 
             foreach (KeyValuePair<int, int> kvp in request.Products) {
