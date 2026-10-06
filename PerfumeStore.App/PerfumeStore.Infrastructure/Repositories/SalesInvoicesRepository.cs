@@ -6,28 +6,35 @@ using PerfumeStore.Infrastructure.Persistence;
 
 namespace PerfumeStore.Infrastructure.Repositories {
     public class SalesInvoicesRepository(PerfumeStoreDbContext dbContext) : ISalesInvoicesRepository {
-        public async Task<long> AddAsync(SalesInvoice salesInvoice, Dictionary<int, int> products) {
+        public async Task<long> AddAsync(SalesInvoice salesInvoice, Dictionary<int, int> products, IReadOnlyDictionary<int, decimal>? prices = null) {
             await using var transaction = await dbContext.Database.BeginTransactionAsync();
 
             try {
+                var ledger = new InventoryCostLedger(dbContext);
                 await dbContext.SalesInvoices.AddAsync(salesInvoice);
                 await dbContext.SaveChangesAsync();
 
                 foreach (var product in products) {
-                    if (!await CheckIfProductExist(product.Key)) {
+                    var stock = await dbContext.Inventory.FindAsync(product.Key);
+                    await ledger.SynchronizeAsync(product.Key, stock?.Quantity ?? 0);
+                    var productEntity = await dbContext.Products.FindAsync(product.Key);
+                    if (productEntity == null) {
                         throw new NotFoundException(nameof(Product), product.Key.ToString());
                     }
 
                     await dbContext.SalesInvoiceItems.AddAsync(new SalesInvoiceItem {
                         SalesInvoiceID = salesInvoice.ID,
                         ProductID = product.Key,
-                        Quantity = product.Value
+                        Quantity = product.Value,
+                        UsesFifoCost = true,
+                        UnitPrice = InvoicePrices.Resolve(product.Key, productEntity.SalePrice, prices)
                     });
 
                     await DecreaseInventoryAsync(product.Key, product.Value);
                 }
 
                 await dbContext.SaveChangesAsync();
+                foreach (var productId in products.Keys) await ledger.RecalculateAsync(productId);
                 await transaction.CommitAsync();
 
                 return salesInvoice.ID;
@@ -85,30 +92,46 @@ namespace PerfumeStore.Infrastructure.Repositories {
             return salesInvoice;
         }
 
-        public async Task UpdateProductsAsync(long salesInvoiceId, Dictionary<int, int> products) {
+        public async Task UpdateProductsAsync(long salesInvoiceId, Dictionary<int, int> products, IReadOnlyDictionary<int, decimal>? prices = null) {
             await using var transaction = await dbContext.Database.BeginTransactionAsync();
 
             try {
-                var oldItems = await dbContext.SalesInvoiceItems
+                var ledger = new InventoryCostLedger(dbContext);
+                var oldItems = await dbContext.SalesInvoiceItems.Include(i => i.Product)
                     .Where(x => x.SalesInvoiceID == salesInvoiceId)
                     .ToListAsync();
 
+                var affectedProducts = oldItems.Select(i => i.ProductID).Union(products.Keys).ToList();
+                foreach (var productId in affectedProducts) {
+                    var stock = await dbContext.Inventory.FindAsync(productId);
+                    await ledger.SynchronizeAsync(productId, stock?.Quantity ?? 0);
+                }
                 // Return old sold quantities back to inventory
                 foreach (var oldItem in oldItems) {
+                    ledger.RestoreLegacySale(oldItem);
                     await IncreaseInventoryAsync(oldItem.ProductID, oldItem.Quantity);
                 }
 
                 dbContext.SalesInvoiceItems.RemoveRange(oldItems);
 
                 foreach (var product in products) {
-                    if (!await CheckIfProductExist(product.Key)) {
+                    var productEntity = await dbContext.Products.FindAsync(product.Key);
+                    if (productEntity == null) {
                         throw new NotFoundException(nameof(Product), product.Key.ToString());
                     }
 
                     await dbContext.SalesInvoiceItems.AddAsync(new SalesInvoiceItem {
                         SalesInvoiceID = salesInvoiceId,
                         ProductID = product.Key,
-                        Quantity = product.Value
+                        Quantity = product.Value,
+                        UsesFifoCost = true,
+                        UnitPrice = InvoicePrices.Resolve(product.Key, productEntity.SalePrice, prices,
+                            oldItems.FirstOrDefault(i => i.ProductID == product.Key)?.UnitPrice),
+                        IsPriceEstimated = InvoicePrices.PreserveEstimate(
+                            oldItems.FirstOrDefault(i => i.ProductID == product.Key)?.IsPriceEstimated ?? false,
+                            oldItems.FirstOrDefault(i => i.ProductID == product.Key)?.UnitPrice,
+                            InvoicePrices.Resolve(product.Key, productEntity.SalePrice, prices,
+                                oldItems.FirstOrDefault(i => i.ProductID == product.Key)?.UnitPrice))
                     });
 
                     // Apply the new sale
@@ -116,6 +139,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 }
 
                 await dbContext.SaveChangesAsync();
+                foreach (var productId in affectedProducts) await ledger.RecalculateAsync(productId);
                 await transaction.CommitAsync();
             } catch {
                 await transaction.RollbackAsync();

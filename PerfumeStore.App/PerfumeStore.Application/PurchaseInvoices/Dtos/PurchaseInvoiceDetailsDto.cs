@@ -16,6 +16,8 @@ namespace PerfumeStore.Application.PurchaseInvoices.Dtos {
 
         public int ProductsCount { get; set; }
 
+        public decimal? ItemsTotal => Products.Any(p => p.UnitCost == null) ? null : Products.Sum(p => p.LineTotal);
+
         public List<PurchaseInvoiceItemDetailsDto> Products { get; set; } = [];
     }
 }

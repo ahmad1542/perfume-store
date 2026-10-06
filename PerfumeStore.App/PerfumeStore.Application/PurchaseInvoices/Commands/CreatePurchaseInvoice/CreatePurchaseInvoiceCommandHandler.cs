@@ -20,7 +20,7 @@ namespace PerfumeStore.Application.PurchaseInvoices.Commands.CreatePurchaseInvoi
                     throw new Exception("Invalid money account.");
             }
 
-            await purchaseInvoicesRepository.AddAsync(purchaseInvoice, request.Products);
+            await purchaseInvoicesRepository.AddAsync(purchaseInvoice, request.Products, request.UnitCosts);
 
             if (request.AmountPaid > 0) {
                 account!.CurrentBalance -= request.AmountPaid;

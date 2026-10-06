@@ -37,7 +37,7 @@ namespace PerfumeStore.Application.SalesInvoices.Commands.CreateSalesInvoice {
                 }
             }
 
-            await salesInvoicesRepository.AddAsync(salesInvoice, request.Products);
+            await salesInvoicesRepository.AddAsync(salesInvoice, request.Products, request.UnitPrices);
 
             if (request.AmountPaid > 0) {
                 account!.CurrentBalance += request.AmountPaid;

@@ -21,8 +21,10 @@ namespace PerfumeStore.Application.SalesInvoices.Commands.UpdateSalesInvoice {
             foreach (KeyValuePair<int, int> kvp in request.Products) {
                 var inventory = await inventoryRepository.GetByIdAsync(kvp.Key);
                 if (inventory != null) {
-                    if (inventory.Quantity < kvp.Value)
-                        throw new BusinessRuleException($"Not enough stock for product id {kvp.Key}. Available: {inventory.Quantity}, requested: {kvp.Value}");
+                    var available = inventory.Quantity + salesInvoice.SalesInvoiceItems
+                        .Where(i => i.ProductID == kvp.Key).Sum(i => i.Quantity);
+                    if (available < kvp.Value)
+                        throw new BusinessRuleException($"Not enough stock for product id {kvp.Key}. Available after undoing this sale: {available}, requested: {kvp.Value}");
                 } else {
                     throw new NotFoundException(nameof(Domain.Entities.Inventory), kvp.Key.ToString());
                 }
@@ -92,7 +94,7 @@ namespace PerfumeStore.Application.SalesInvoices.Commands.UpdateSalesInvoice {
                 }
             }
 
-            await salesInvoicesRepository.UpdateProductsAsync(salesInvoice.ID, request.Products);
+            await salesInvoicesRepository.UpdateProductsAsync(salesInvoice.ID, request.Products, request.UnitPrices);
         }
     }
 }

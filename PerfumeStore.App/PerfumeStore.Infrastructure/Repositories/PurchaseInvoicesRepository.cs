@@ -6,28 +6,36 @@ using PerfumeStore.Infrastructure.Persistence;
 
 namespace PerfumeStore.Infrastructure.Repositories {
     public class PurchaseInvoicesRepository(PerfumeStoreDbContext dbContext) : IPurchaseInvoicesRepository {
-        public async Task<long> AddAsync(PurchaseInvoice purchaseInvoice, Dictionary<int, int> products) {
+        public async Task<long> AddAsync(PurchaseInvoice purchaseInvoice, Dictionary<int, int> products, IReadOnlyDictionary<int, decimal>? prices = null) {
             await using var transaction = await dbContext.Database.BeginTransactionAsync();
 
             try {
+                var ledger = new InventoryCostLedger(dbContext);
                 await dbContext.PurchaseInvoices.AddAsync(purchaseInvoice);
                 await dbContext.SaveChangesAsync();
 
                 foreach (var product in products) {
-                    if (!await CheckIfProductExist(product.Key)) {
+                    var stock = await dbContext.Inventory.FindAsync(product.Key);
+                    await ledger.SynchronizeAsync(product.Key, stock?.Quantity ?? 0);
+                    var productEntity = await dbContext.Products.FindAsync(product.Key);
+                    if (productEntity == null) {
                         throw new NotFoundException(nameof(Product), product.Key.ToString());
                     }
 
                     await dbContext.PurchaseInvoiceItems.AddAsync(new PurchaseInvoiceItem {
                         PurchaseInvoiceID = purchaseInvoice.ID,
                         ProductID = product.Key,
-                        Quantity = product.Value
+                        Quantity = product.Value,
+                        UnitCost = InvoicePrices.Resolve(product.Key, productEntity.CostPrice, prices)
                     });
 
                     await IncreaseInventoryAsync(product.Key, product.Value);
+                    await ledger.RecordPurchaseAsync(purchaseInvoice.ID, product.Key, product.Value,
+                        InvoicePrices.Resolve(product.Key, productEntity.CostPrice, prices), purchaseInvoice.Date, false);
                 }
 
                 await dbContext.SaveChangesAsync();
+                foreach (var productId in products.Keys) await ledger.RecalculateAsync(productId);
                 await transaction.CommitAsync();
 
                 return purchaseInvoice.ID;
@@ -82,37 +90,65 @@ namespace PerfumeStore.Infrastructure.Repositories {
             return purchaseInvoice;
         }
 
-        public async Task UpdateProductsAsync(long purchaseInvoiceId, Dictionary<int, int> products) {
+        public async Task UpdateProductsAsync(long purchaseInvoiceId, Dictionary<int, int> products, IReadOnlyDictionary<int, decimal>? prices = null) {
             await using var transaction = await dbContext.Database.BeginTransactionAsync();
 
             try {
+                var ledger = new InventoryCostLedger(dbContext);
                 var oldItems = await dbContext.PurchaseInvoiceItems
                     .Where(x => x.PurchaseInvoiceID == purchaseInvoiceId)
                     .ToListAsync();
 
+                var affectedProducts = oldItems.Select(i => i.ProductID).Union(products.Keys).ToList();
+                foreach (var productId in affectedProducts) {
+                    var stock = await dbContext.Inventory.FindAsync(productId);
+                    await ledger.SynchronizeAsync(productId, stock?.Quantity ?? 0);
+                    await ledger.PrepareLegacyHistoryAsync(productId);
+                }
                 // Remove old purchased quantities from inventory first
                 foreach (var oldItem in oldItems) {
                     await DecreaseInventoryForPurchaseUpdateAsync(oldItem.ProductID, oldItem.Quantity);
+                    var oldBatch = await dbContext.InventoryBatches.SingleOrDefaultAsync(b =>
+                        b.PurchaseInvoiceID == purchaseInvoiceId && b.ProductID == oldItem.ProductID);
+                    if (oldBatch != null) oldBatch.OriginalQuantity -= oldItem.Quantity;
                 }
 
                 dbContext.PurchaseInvoiceItems.RemoveRange(oldItems);
 
                 foreach (var product in products) {
-                    if (!await CheckIfProductExist(product.Key)) {
+                    var productEntity = await dbContext.Products.FindAsync(product.Key);
+                    if (productEntity == null) {
                         throw new NotFoundException(nameof(Product), product.Key.ToString());
                     }
 
                     await dbContext.PurchaseInvoiceItems.AddAsync(new PurchaseInvoiceItem {
                         PurchaseInvoiceID = purchaseInvoiceId,
                         ProductID = product.Key,
-                        Quantity = product.Value
+                        Quantity = product.Value,
+                        UnitCost = InvoicePrices.Resolve(product.Key, productEntity.CostPrice, prices,
+                            oldItems.FirstOrDefault(i => i.ProductID == product.Key)?.UnitCost),
+                        IsPriceEstimated = InvoicePrices.PreserveEstimate(
+                            oldItems.FirstOrDefault(i => i.ProductID == product.Key)?.IsPriceEstimated ?? false,
+                            oldItems.FirstOrDefault(i => i.ProductID == product.Key)?.UnitCost,
+                            InvoicePrices.Resolve(product.Key, productEntity.CostPrice, prices,
+                                oldItems.FirstOrDefault(i => i.ProductID == product.Key)?.UnitCost))
                     });
 
                     // Apply the new purchase
                     await IncreaseInventoryAsync(product.Key, product.Value);
+                    var invoice = await dbContext.PurchaseInvoices.FindAsync(purchaseInvoiceId);
+                    var oldItem = oldItems.FirstOrDefault(i => i.ProductID == product.Key);
+                    var existingBatch = await dbContext.InventoryBatches.SingleOrDefaultAsync(b =>
+                        b.PurchaseInvoiceID == purchaseInvoiceId && b.ProductID == product.Key);
+                    await ledger.RecordPurchaseAsync(purchaseInvoiceId, product.Key,
+                        product.Value + (existingBatch?.OriginalQuantity ?? 0),
+                        InvoicePrices.Resolve(product.Key, productEntity.CostPrice, prices, oldItem?.UnitCost),
+                        invoice!.Date, InvoicePrices.PreserveEstimate(oldItem?.IsPriceEstimated ?? false,
+                            oldItem?.UnitCost, InvoicePrices.Resolve(product.Key, productEntity.CostPrice, prices, oldItem?.UnitCost)));
                 }
 
                 await dbContext.SaveChangesAsync();
+                foreach (var productId in affectedProducts) await ledger.RecalculateAsync(productId);
                 await transaction.CommitAsync();
             } catch {
                 await transaction.RollbackAsync();
@@ -148,10 +184,8 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 throw new Exception($"Inventory record not found for product id {productId}.");
             }
 
-            if (inventory.Quantity < quantity) {
-                throw new Exception($"Cannot reverse old purchase invoice for product id {productId}. Available: {inventory.Quantity}, required: {quantity}");
-            }
-
+            // The old receipt is reversed temporarily; the corrected receipt is applied
+            // before FIFO verifies that the final stock covers every recorded sale.
             inventory.Quantity -= quantity;
         }
     }

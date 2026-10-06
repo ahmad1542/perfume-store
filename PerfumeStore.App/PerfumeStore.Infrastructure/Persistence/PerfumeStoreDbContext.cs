@@ -15,6 +15,8 @@ public partial class PerfumeStoreDbContext : DbContext {
     public virtual DbSet<Expense> Expenses { get; set; }
     public virtual DbSet<ExpenseType> ExpenseTypes { get; set; }
     public virtual DbSet<Inventory> Inventory { get; set; }
+    public virtual DbSet<InventoryBatch> InventoryBatches { get; set; }
+    public virtual DbSet<SalesCostAllocation> SalesCostAllocations { get; set; }
     public virtual DbSet<MoneyAccount> MoneyAccounts { get; set; }
     public virtual DbSet<MoneyTransaction> MoneyTransactions { get; set; }
     public virtual DbSet<PaymentVoucher> PaymentVouchers { get; set; }
@@ -32,6 +34,24 @@ public partial class PerfumeStoreDbContext : DbContext {
     public virtual DbSet<Person> Persons { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<InventoryBatch>(entity => {
+            entity.Property(e => e.UnitCost).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Source).HasMaxLength(30);
+            entity.HasOne(e => e.Product).WithMany(p => p.InventoryBatches)
+                .HasForeignKey(e => e.ProductID).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.PurchaseInvoice).WithMany()
+                .HasForeignKey(e => e.PurchaseInvoiceID).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.ProductID, e.ReceivedAt });
+            entity.HasIndex(e => new { e.PurchaseInvoiceID, e.ProductID }).IsUnique()
+                .HasFilter("[PurchaseInvoiceID] IS NOT NULL");
+        });
+        modelBuilder.Entity<SalesCostAllocation>(entity => {
+            entity.Property(e => e.UnitCost).HasColumnType("decimal(18, 2)");
+            entity.HasOne(e => e.SalesInvoiceItem).WithMany().HasForeignKey(e => e.SalesInvoiceItemID)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.InventoryBatch).WithMany().HasForeignKey(e => e.InventoryBatchID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
         modelBuilder.Entity<Brand>(entity => {
             entity.HasKey(e => e.ID);
             entity.HasIndex(e => e.Name, "IX_Brands").IsUnique();
@@ -162,6 +182,7 @@ public partial class PerfumeStoreDbContext : DbContext {
 
         modelBuilder.Entity<PurchaseInvoiceItem>(entity => {
             entity.HasKey(e => e.ID);
+            entity.Property(e => e.UnitCost).HasColumnType("decimal(18, 2)");
 
             entity.HasOne(d => d.Product).WithMany(p => p.PurchaseInvoiceItems)
                 .HasForeignKey(d => d.ProductID)
@@ -236,6 +257,8 @@ public partial class PerfumeStoreDbContext : DbContext {
 
         modelBuilder.Entity<SalesInvoiceItem>(entity => {
             entity.HasKey(e => e.ID);
+            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CostTotal).HasColumnType("decimal(18, 2)");
 
             entity.HasOne(d => d.Product).WithMany(p => p.SalesInvoiceItems)
                 .HasForeignKey(d => d.ProductID)

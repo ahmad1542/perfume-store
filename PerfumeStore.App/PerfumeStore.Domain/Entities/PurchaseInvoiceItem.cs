@@ -7,6 +7,8 @@ public class PurchaseInvoiceItem {
     public long ID { get; set; }
 
     public int Quantity { get; set; }
+    public decimal? UnitCost { get; set; }
+    public bool IsPriceEstimated { get; set; }
 
     public long PurchaseInvoiceID { get; set; }
 

@@ -183,6 +183,51 @@ namespace PerfumeStore.Infrastructure.Migrations
                     b.ToTable("Inventory");
                 });
 
+            modelBuilder.Entity("PerfumeStore.Domain.Entities.InventoryBatch", b =>
+                {
+                    b.Property<long>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ID"));
+
+                    b.Property<bool>("IsCostEstimated")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OriginalQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductID")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("PurchaseInvoiceID")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("ReceivedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RemainingQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("ProductID", "ReceivedAt");
+
+                    b.HasIndex("PurchaseInvoiceID", "ProductID")
+                        .IsUnique()
+                        .HasFilter("[PurchaseInvoiceID] IS NOT NULL");
+
+                    b.ToTable("InventoryBatches");
+                });
+
             modelBuilder.Entity("PerfumeStore.Domain.Entities.MoneyAccount", b =>
                 {
                     b.Property<int>("ID")
@@ -473,6 +518,9 @@ namespace PerfumeStore.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ID"));
 
+                    b.Property<bool>("IsPriceEstimated")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ProductID")
                         .HasColumnType("int");
 
@@ -481,6 +529,9 @@ namespace PerfumeStore.Infrastructure.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasColumnType("decimal(18, 2)");
 
                     b.HasKey("ID");
 
@@ -559,6 +610,38 @@ namespace PerfumeStore.Infrastructure.Migrations
                     b.ToTable("ReceiptVoucherSalesInvoices");
                 });
 
+            modelBuilder.Entity("PerfumeStore.Domain.Entities.SalesCostAllocation", b =>
+                {
+                    b.Property<long>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ID"));
+
+                    b.Property<long>("InventoryBatchID")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsCostEstimated")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<long>("SalesInvoiceItemID")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("InventoryBatchID");
+
+                    b.HasIndex("SalesInvoiceItemID");
+
+                    b.ToTable("SalesCostAllocations");
+                });
+
             modelBuilder.Entity("PerfumeStore.Domain.Entities.SalesInvoice", b =>
                 {
                     b.Property<long>("ID")
@@ -603,6 +686,15 @@ namespace PerfumeStore.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ID"));
 
+                    b.Property<decimal?>("CostTotal")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<bool>("IsCostEstimated")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPriceEstimated")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ProductID")
                         .HasColumnType("int");
 
@@ -611,6 +703,12 @@ namespace PerfumeStore.Infrastructure.Migrations
 
                     b.Property<long>("SalesInvoiceID")
                         .HasColumnType("bigint");
+
+                    b.Property<decimal?>("UnitPrice")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<bool>("UsesFifoCost")
+                        .HasColumnType("bit");
 
                     b.HasKey("ID");
 
@@ -691,6 +789,24 @@ namespace PerfumeStore.Infrastructure.Migrations
                         .HasConstraintName("FK_Inventory_Products1");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("PerfumeStore.Domain.Entities.InventoryBatch", b =>
+                {
+                    b.HasOne("PerfumeStore.Domain.Entities.Product", "Product")
+                        .WithMany("InventoryBatches")
+                        .HasForeignKey("ProductID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PerfumeStore.Domain.Entities.PurchaseInvoice", "PurchaseInvoice")
+                        .WithMany()
+                        .HasForeignKey("PurchaseInvoiceID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Product");
+
+                    b.Navigation("PurchaseInvoice");
                 });
 
             modelBuilder.Entity("PerfumeStore.Domain.Entities.MoneyTransaction", b =>
@@ -853,6 +969,25 @@ namespace PerfumeStore.Infrastructure.Migrations
                     b.Navigation("SalesInvoice");
                 });
 
+            modelBuilder.Entity("PerfumeStore.Domain.Entities.SalesCostAllocation", b =>
+                {
+                    b.HasOne("PerfumeStore.Domain.Entities.InventoryBatch", "InventoryBatch")
+                        .WithMany()
+                        .HasForeignKey("InventoryBatchID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PerfumeStore.Domain.Entities.SalesInvoiceItem", "SalesInvoiceItem")
+                        .WithMany()
+                        .HasForeignKey("SalesInvoiceItemID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InventoryBatch");
+
+                    b.Navigation("SalesInvoiceItem");
+                });
+
             modelBuilder.Entity("PerfumeStore.Domain.Entities.SalesInvoice", b =>
                 {
                     b.HasOne("PerfumeStore.Domain.Entities.Customer", "Customer")
@@ -925,6 +1060,8 @@ namespace PerfumeStore.Infrastructure.Migrations
             modelBuilder.Entity("PerfumeStore.Domain.Entities.Product", b =>
                 {
                     b.Navigation("Inventory");
+
+                    b.Navigation("InventoryBatches");
 
                     b.Navigation("PurchaseInvoiceItems");
 

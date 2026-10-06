@@ -13,6 +13,7 @@ public class Product : BaseEntity {
 
     public Brand? Brand { get; set; }
     public Inventory? Inventory { get; set; }
+    public ICollection<InventoryBatch> InventoryBatches { get; set; } = new List<InventoryBatch>();
     public ProductCategory ProductCategory { get; set; } = null!;
 
     public ICollection<PurchaseInvoiceItem> PurchaseInvoiceItems { get; private set; } = new List<PurchaseInvoiceItem>();

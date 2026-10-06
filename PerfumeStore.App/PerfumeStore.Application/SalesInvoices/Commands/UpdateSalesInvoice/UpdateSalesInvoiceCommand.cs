@@ -15,6 +15,7 @@ namespace PerfumeStore.Application.SalesInvoices.Commands.UpdateSalesInvoice {
         public decimal? DebtAmount { get; set; }
         public string? DebtNotes { get; set; }
         public bool HasDebt { get; set; } = false;
+        public Dictionary<int, decimal>? UnitPrices { get; set; }
         public Dictionary<int, int> Products { get; set; } = [];
     }
 }

@@ -76,7 +76,7 @@ namespace PerfumeStore.Application.PurchaseInvoices.Commands.UpdatePurchaseInvoi
                 }
             }
 
-            await purchaseInvoicesRepository.UpdateProductsAsync(purchaseInvoice.ID, request.Products);
+            await purchaseInvoicesRepository.UpdateProductsAsync(purchaseInvoice.ID, request.Products, request.UnitCosts);
         }
     }
 }
