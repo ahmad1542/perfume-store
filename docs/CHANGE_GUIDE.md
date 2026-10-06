@@ -55,6 +55,10 @@ Backend tests exercise the costing rules and real relational persistence,
 including corrections and rollback, using disposable SQLite databases. SQL
 Server container checks verify the production migration path separately.
 
+Receipt dates are compared as calendar dates, then by batch ID. This keeps
+same-day entries in their recorded order even when one entry has a time and
+another invoice stores midnight.
+
 ## 3. Screens
 
 Purchase forms contain an editable unit cost. Sale forms contain an editable
@@ -82,6 +86,12 @@ GitHub Actions builds the solution, runs backend and browser-script tests, build
 the Docker image, and checks startup with a fresh SQL Server. Its cleanup removes
 only the disposable CI database. README contains local startup, phone access,
 migration, data persistence, and verification instructions.
+
+Two additional maintenance fixes were saved separately: OpenAPI was pinned to
+the patched 2.7.5 release, and an old migration now releases the purchase foreign
+key before replacing the supplier primary key. The following migration restores
+that relationship. These changes repair dependencies and database setup rather
+than change payment, debt, or invoice rules.
 
 ## Review examples
 
