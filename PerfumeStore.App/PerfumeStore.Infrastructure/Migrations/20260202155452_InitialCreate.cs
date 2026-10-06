@@ -11,6 +11,12 @@ namespace PerfumeStore.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Release the purchase FK before replacing the referenced supplier
+            // primary key. DebtsTable restores it against the renamed Persons.
+            migrationBuilder.DropForeignKey(
+                name: "FK_PurchaseInvoices_Suppliers1",
+                table: "PurchaseInvoices");
+
             migrationBuilder.DropForeignKey(
                 name: "FK_PaymentVouchers_Suppliers1",
                 table: "PaymentVouchers");
@@ -302,6 +308,13 @@ namespace PerfumeStore.Infrastructure.Migrations
             migrationBuilder.AddForeignKey(
                 name: "FK_PaymentVouchers_Suppliers1",
                 table: "PaymentVouchers",
+                column: "SupplierPhone",
+                principalTable: "Suppliers",
+                principalColumn: "SupplierPhone");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_PurchaseInvoices_Suppliers1",
+                table: "PurchaseInvoices",
                 column: "SupplierPhone",
                 principalTable: "Suppliers",
                 principalColumn: "SupplierPhone");
