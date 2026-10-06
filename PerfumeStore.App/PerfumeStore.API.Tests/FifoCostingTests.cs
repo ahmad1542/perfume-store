@@ -66,6 +66,17 @@ public sealed class FifoCostingTests {
     }
 
     [Fact]
+    public void SameDayReceiptsUseBatchOrderDespiteDifferentTimes() {
+        var batches = NaxosStock();
+        batches[0].ReceivedAt = new DateTime(2026, 10, 6, 14, 0, 0);
+        batches[1].ReceivedAt = new DateTime(2026, 10, 6);
+        var sale = new SalesInvoiceItem { ID = 1, ProductID = 1, Quantity = 5 };
+        FifoCosting.Recalculate(batches, [sale]);
+        Assert.Equal(3780m, sale.CostTotal);
+        Assert.Equal(1, batches[1].RemainingQuantity);
+    }
+
+    [Fact]
     public void OmittedPriceKeepsSavedPriceBeforeUsingCatalogDefault() {
         Assert.Equal(25m, InvoicePrices.Resolve(1, 30, null, 25));
         Assert.Equal(30m, InvoicePrices.Resolve(1, 30, null));

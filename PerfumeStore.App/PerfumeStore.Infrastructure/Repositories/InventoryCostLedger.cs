@@ -49,7 +49,7 @@ internal sealed class InventoryCostLedger(PerfumeStoreDbContext dbContext) {
     }
     public async Task SynchronizeAsync(int productId, int quantity) {
         var batches = await dbContext.InventoryBatches.Where(b => b.ProductID == productId)
-            .OrderBy(b => b.ReceivedAt).ThenBy(b => b.ID).ToListAsync();
+            .OrderBy(b => b.ReceivedAt.Date).ThenBy(b => b.ID).ToListAsync();
         var difference = quantity - batches.Sum(b => b.RemainingQuantity);
         if (difference > 0) {
             var product = await dbContext.Products.FindAsync(productId);

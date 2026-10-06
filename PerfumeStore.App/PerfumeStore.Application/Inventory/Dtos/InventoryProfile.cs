@@ -10,7 +10,7 @@ namespace PerfumeStore.Application.Inventory.Dtos {
             CreateMap<Domain.Entities.Inventory, InventoryDto>()
                 .ForMember(d => d.ProductName, opt => opt.MapFrom(s => s.Product.Name))
                 .ForMember(d => d.Batches, opt => opt.MapFrom(s => s.Product.InventoryBatches
-                    .Where(b => b.RemainingQuantity > 0).OrderBy(b => b.ReceivedAt).ThenBy(b => b.ID)));
+                    .Where(b => b.RemainingQuantity > 0).OrderBy(b => b.ReceivedAt.Date).ThenBy(b => b.ID)));
              CreateMap<CreateInventoryCommand, Domain.Entities.Inventory>();
              CreateMap<UpdateInventoryCommand, Domain.Entities.Inventory>();
         }

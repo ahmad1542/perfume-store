@@ -7,7 +7,7 @@ public static class FifoCosting {
     // update affected sale costs without changing the agreed selling prices.
     public static List<SalesCostAllocation> Recalculate(
         IEnumerable<InventoryBatch> inventoryBatches, IEnumerable<SalesInvoiceItem> sales) {
-        var batches = inventoryBatches.OrderBy(b => b.ReceivedAt).ThenBy(b => b.ID).ToList();
+        var batches = inventoryBatches.OrderBy(b => b.ReceivedAt.Date).ThenBy(b => b.ID).ToList();
         foreach (var batch in batches) batch.RemainingQuantity = batch.OriginalQuantity;
         var allocations = new List<SalesCostAllocation>();
         foreach (var sale in sales.OrderBy(s => s.SalesInvoiceID).ThenBy(s => s.ID)) {
