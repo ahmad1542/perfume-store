@@ -9,10 +9,7 @@
 
     // 2) if frontend and backend are on same host but different path via reverse proxy
     // example: https://mydomain.com/api
-    if (
-      window.location.hostname !== "localhost" &&
-      window.location.hostname !== "127.0.0.1"
-    ) {
+    if (window.location.protocol !== "file:" && window.location.port !== "5500") {
       return `${window.location.origin}/api`;
     }
 

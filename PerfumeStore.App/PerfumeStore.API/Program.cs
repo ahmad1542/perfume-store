@@ -2,6 +2,8 @@ using PerfumeStore.Application.Extensions;
 using PerfumeStore.Infrastructure.Extensions;
 using PerfumeStore.API.Errors;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using PerfumeStore.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +36,11 @@ builder.Services.AddCors(options => {
 });
 
 var app = builder.Build();
+if (builder.Configuration.GetValue("Database:Initialize", false)) {
+    await using var scope = app.Services.CreateAsyncScope();
+    var database = scope.ServiceProvider.GetRequiredService<PerfumeStoreDbContext>();
+    await database.Database.MigrateAsync();
+}
 app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
@@ -43,13 +50,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (builder.Configuration.GetValue("Hosting:UseHttpsRedirection", true)) {
+    app.UseHttpsRedirection();
+}
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseCors(allowedOrigins);
 
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGet("/", () => Results.Redirect("/Dashboard/index.html"));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
 app.Run();
 

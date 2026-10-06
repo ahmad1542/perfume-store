@@ -2,7 +2,7 @@
 
 async function initPage() {
   try {
-    await fillPeopleSelect('SupplierPhone', 'https://localhost:7209/api/Suppliers');
+    await fillPeopleSelect('SupplierPhone', window.API_ENDPOINTS.suppliers);
     await fillMoneyAccounts('MoneyAccountID');
   } catch (e) { console.error(e); }
 }
@@ -30,7 +30,7 @@ async function fillMoneyAccounts(selectId) {
   if (!el) return;
   el.innerHTML = `<option value="">-- Select --</option>`;
   let list = [];
-  try { list = await apiGetJson("https://localhost:7209/api/MoneyAccounts"); } catch { list = []; }
+  try { list = await apiGetJson(window.API_ENDPOINTS.moneyAccounts); } catch { list = []; }
   (Array.isArray(list)?list:[]).forEach(a => {
     const id = a.id ?? a.ID ?? a.Id ?? "";
     const name = a.accountName ?? a.AccountName ?? ("Account #" + id);
@@ -46,7 +46,7 @@ async function fillProductsToElement(selectEl) {
   if (!selectEl) return;
   selectEl.innerHTML = `<option value="">-- Select product --</option>`;
   let list = [];
-  try { list = await apiGetJson("https://localhost:7209/api/Products"); } catch { list = []; }
+  try { list = await apiGetJson(window.API_ENDPOINTS.products); } catch { list = []; }
   (Array.isArray(list)?list:[]).forEach(p => {
     const id = p.id ?? p.ID ?? "";
     const name = p.name ?? p.Name ?? ("Product #" + id);

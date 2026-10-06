@@ -7,5 +7,6 @@
 **/.vs
 
 appsettings.Development.json
-
+.env
 **/TestResults/
+.tools/

@@ -1,0 +1,12 @@
+**/bin
+**/obj
+**/.vs
+.git
+.env
+**/appsettings.Development.json
+**/TestResults
+**/node_modules
+output
+tmp
+.tools
+PerfumeStore.Web/tests
