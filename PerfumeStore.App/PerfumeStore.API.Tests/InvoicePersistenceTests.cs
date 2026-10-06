@@ -171,6 +171,20 @@ public sealed class InvoicePersistenceTests : IAsyncLifetime {
     }
 
     [Fact]
+    public async Task ManualDecreaseRemovesOldestRemainingUnitsWithoutRepricingPastSale() {
+        await Purchase();
+        await Sell(3, 900);
+        await new InventoryRepository(db).UpdateQuantityAsync(product.ID, 2, null);
+        await Sell(1, 900);
+        db.ChangeTracker.Clear();
+        var sales = await db.SalesInvoiceItems.OrderBy(s => s.SalesInvoiceID).ToListAsync();
+        Assert.Equal(2250m, sales[0].CostTotal);
+        Assert.Equal(780m, sales[1].CostTotal);
+        Assert.Equal(1, (await db.Inventory.SingleAsync()).Quantity);
+        Assert.Equal(1, await db.InventoryBatches.SumAsync(b => b.RemainingQuantity));
+    }
+
+    [Fact]
     public async Task FailedSaleRollsBackInvoiceAndStock() {
         await Assert.ThrowsAsync<Exception>(() => Sell(10, 900));
         db.ChangeTracker.Clear();
