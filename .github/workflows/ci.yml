@@ -1,0 +1,41 @@
+name: Build and test
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: dotnet build PerfumeStore.App/PerfumeStore.slnx -c Release
+      - run: dotnet test PerfumeStore.App/PerfumeStore.slnx -c Release --no-build
+      - run: node --test PerfumeStore.Web/tests/*.test.cjs
+      - run: docker build -t perfume-store:local .
+      - name: Start SQL Server and apply migrations through the app
+        env:
+          SQL_PASSWORD: CI-Only-Perfume!9462
+        run: |
+          docker compose up -d --no-build
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:8080/health; then
+              node scripts/docker-smoke.cjs http://localhost:8080 --disposable
+              exit $?
+            fi
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - name: Show container logs on failure
+        if: failure()
+        env:
+          SQL_PASSWORD: CI-Only-Perfume!9462
+        run: docker compose logs --tail 100
+      - name: Stop CI containers
+        if: always()
+        env:
+          SQL_PASSWORD: CI-Only-Perfume!9462
+        run: docker compose down -v
