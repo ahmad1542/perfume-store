@@ -237,15 +237,18 @@ function bindDashboard(data) {
 }
 
 async function loadDashboard() {
+  const message = document.getElementById('dashboardMsg');
   try {
     const url = `${window.APP_CONFIG.API_BASE_URL}/Dashboard`;
     const data = await apiGetJson(url);
     bindDashboard(data);
+    if (message) message.hidden = true;
   } catch (err) {
     console.error(err);
-    renderAlerts([]);
-    renderExpenseBreakdown([]);
-    renderActivity([]);
+    if (message) {
+      message.textContent = 'Could not refresh the dashboard. Displayed values may be out of date. Please try Refresh again.';
+      message.hidden = false;
+    }
   }
 }
 

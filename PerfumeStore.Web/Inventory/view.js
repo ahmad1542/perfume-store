@@ -19,7 +19,7 @@ async function loadView() {
     if (batches.length) {
       const table = document.createElement('div');
       table.className = 'table-wrapper table-card';
-      table.innerHTML = `<h3>Stock by purchase cost</h3><table><thead><tr><th>Source</th><th>Qty remaining</th><th>Unit cost</th><th>Stock value</th></tr></thead><tbody>${batches.map(b => {
+      table.innerHTML = `<h3>Stock by purchase cost</h3><table class="inventory-table"><thead><tr><th>Source</th><th>Qty remaining</th><th>Unit cost</th><th>Stock value</th></tr></thead><tbody>${batches.map(b => {
         const qty = b.remainingQuantity ?? b.RemainingQuantity;
         const cost = b.unitCost ?? b.UnitCost;
         const estimated = b.isCostEstimated ?? b.IsCostEstimated;

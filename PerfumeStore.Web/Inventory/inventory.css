@@ -60,6 +60,16 @@
   gap: 16px;
 }
 
+#details {
+  display: contents;
+}
+
+.details-row .table-wrapper {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
 #tableCard[style*="display: none"] {
   margin-top: 0;
 }
