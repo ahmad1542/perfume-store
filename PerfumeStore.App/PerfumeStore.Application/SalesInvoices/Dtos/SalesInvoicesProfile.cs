@@ -23,6 +23,8 @@ namespace PerfumeStore.Application.SalesInvoices.Dtos {
                 .ForMember(d => d.ProductName, opt => opt.MapFrom(s => s.Product != null ? s.Product.Name : null));
 
             CreateMap<SalesInvoice, SalesInvoiceDetailsDto>()
+                .ForMember(d => d.DebtNotes, opt => opt.MapFrom(s => s.Debt != null ? s.Debt.Notes : null))
+                .ForMember(d => d.AppliedVoucherPayments, opt => opt.MapFrom(s => s.ReceiptVoucherSalesInvoices.Sum(v => v.AppliedAmount)))
                 .ForMember(d => d.CustomerName, opt => opt.MapFrom(s => s.Customer != null ? s.Customer.Name : null))
                 .ForMember(d => d.DebtAmount, opt => opt.MapFrom(s => s.Debt != null ? s.Debt.Amount : 0))
                 .ForMember(d => d.ProductsCount, opt => opt.MapFrom(s => s.SalesInvoiceItems.Count))

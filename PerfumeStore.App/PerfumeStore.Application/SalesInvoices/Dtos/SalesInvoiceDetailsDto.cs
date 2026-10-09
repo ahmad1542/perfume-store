@@ -14,6 +14,14 @@ namespace PerfumeStore.Application.SalesInvoices.Dtos {
 
         public decimal? DebtAmount { get; set; }
 
+        public Guid? CustomerId { get; set; }
+        public int? MoneyAccountId { get; set; }
+        public string? DebtNotes { get; set; }
+        public decimal AppliedVoucherPayments { get; set; }
+        public decimal OriginalDebtAmount => Math.Max(0m, (DebtAmount ?? 0m) + AppliedVoucherPayments - CreditRefundDue);
+        public decimal CreditRefundDue => ItemsTotal.HasValue ? Math.Max(0m, AmountPaid + AppliedVoucherPayments - ItemsTotal.Value) : 0m;
+        public string DebtStatus => CreditRefundDue > 0 ? "Credit / refund due" : (DebtAmount ?? 0m) > 0 ? (AppliedVoucherPayments > 0 ? "Partially paid" : "Unpaid") : "Settled";
+
         public int ProductsCount { get; set; }
 
         public decimal? ItemsTotal => Products.Any(p => p.UnitPrice == null) ? null : Products.Sum(p => p.LineTotal);

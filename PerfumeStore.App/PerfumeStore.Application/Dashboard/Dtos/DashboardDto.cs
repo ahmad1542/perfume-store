@@ -7,6 +7,12 @@ namespace PerfumeStore.Application.Dashboard.Dtos {
         public List<DashboardExpenseBreakdownDto> Expenses { get; set; } = new();
         public List<DashboardAlertDto> Alerts { get; set; } = new();
         public List<DashboardRecentActivityDto> Activity { get; set; } = new();
+        public decimal SalesRevenue { get; set; }
+        public decimal CostOfGoodsSold { get; set; }
+        public decimal GrossProfit { get; set; }
+        public decimal ExpenseTotal { get; set; }
+        public decimal NetProfit { get; set; }
+        public bool HasEstimatedProfit { get; set; }
         public string MonthLabel { get; set; } = string.Empty;
     }
 

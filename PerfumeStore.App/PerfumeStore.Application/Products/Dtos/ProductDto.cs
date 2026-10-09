@@ -6,6 +6,8 @@
         public decimal SalePrice { get; set; }
         public decimal CostPrice { get; set; }
         public int? MinStock { get; set; }
+        public int? BrandID { get; set; }
+        public int ProductCategoryID { get; set; }
 
         public string CategoryName { get; set; } = null!;
 

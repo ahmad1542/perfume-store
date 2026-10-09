@@ -5,15 +5,16 @@ using PerfumeStore.Infrastructure.Persistence;
 
 namespace PerfumeStore.Infrastructure.Repositories {
     public class DashboardRepository(PerfumeStoreDbContext dbContext) : IDashboardService {
-        public async Task<DashboardDto> GetAsync() {
+        public async Task<DashboardDto> GetAsync(int? year = null, int? month = null) {
             var now = DateTime.Now;
-            var monthStart = new DateTime(now.Year, now.Month, 1);
+            var monthStart = new DateTime(year ?? now.Year, month ?? now.Month, 1);
             var nextMonthStart = monthStart.AddMonths(1);
             var previousMonthStart = monthStart.AddMonths(-1);
             var daysInMonth = DateTime.DaysInMonth(monthStart.Year, monthStart.Month);
 
             var salesInvoices = await dbContext.SalesInvoices
                 .AsNoTracking()
+                .Include(x => x.SalesInvoiceItems).ThenInclude(x => x.Product)
                 .Include(x => x.Customer)
                 .Include(x => x.Debt)
                 .Where(x => x.Date >= monthStart && x.Date < nextMonthStart)
@@ -21,12 +22,14 @@ namespace PerfumeStore.Infrastructure.Repositories {
 
             var previousSalesInvoices = await dbContext.SalesInvoices
                 .AsNoTracking()
+                .Include(x => x.SalesInvoiceItems).ThenInclude(x => x.Product)
                 .Include(x => x.Debt)
                 .Where(x => x.Date >= previousMonthStart && x.Date < monthStart)
                 .ToListAsync();
 
             var purchaseInvoices = await dbContext.PurchaseInvoices
                 .AsNoTracking()
+                .Include(x => x.PurchaseInvoiceItems).ThenInclude(x => x.Product)
                 .Include(x => x.Supplier)
                 .Include(x => x.Debt)
                 .Where(x => x.Date >= monthStart && x.Date < nextMonthStart)
@@ -34,6 +37,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
 
             var previousPurchaseInvoices = await dbContext.PurchaseInvoices
                 .AsNoTracking()
+                .Include(x => x.PurchaseInvoiceItems).ThenInclude(x => x.Product)
                 .Include(x => x.Debt)
                 .Where(x => x.Date >= previousMonthStart && x.Date < monthStart)
                 .ToListAsync();
@@ -108,8 +112,10 @@ namespace PerfumeStore.Infrastructure.Repositories {
             var expensesCurrent = expenses.Sum(x => x.Amount);
             var expensesPreviousTotal = previousExpenses.Sum(x => x.Amount);
 
-            var earningsCurrent = salesCurrent - purchasesCurrent - expensesCurrent;
-            var earningsPrevious = salesPrevious - purchasesPrevious - expensesPreviousTotal;
+            var costCurrent = salesInvoices.Sum(x => x.SalesInvoiceItems.Sum(i => i.CostTotal ?? i.Quantity * i.Product.CostPrice));
+            var costPrevious = previousSalesInvoices.Sum(x => x.SalesInvoiceItems.Sum(i => i.CostTotal ?? i.Quantity * i.Product.CostPrice));
+            var earningsCurrent = salesCurrent - costCurrent - expensesCurrent;
+            var earningsPrevious = salesPrevious - costPrevious - expensesPreviousTotal;
 
             var lowStockCount = inventoryList.Count(x => x.Product.MinStock.HasValue && x.Quantity <= x.Product.MinStock.Value);
             var customerDebtsCount = openDebts.Count(x => x.PersonId.HasValue && customerIdSet.Contains(x.PersonId.Value));
@@ -125,6 +131,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 var index = invoice.Date.Day - 1;
                 if (index >= 0 && index < daysInMonth) {
                     dailySales[index] += GetSalesInvoiceTotal(invoice);
+                    dailyProfit[index] += GetSalesInvoiceTotal(invoice) - invoice.SalesInvoiceItems.Sum(i => i.CostTotal ?? i.Quantity * i.Product.CostPrice);
                 }
             }
 
@@ -142,16 +149,12 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 }
             }
 
-            for (var i = 0; i < daysInMonth; i++) {
-                dailyProfit[i] += dailySales[i] - dailyPurchases[i];
-            }
-
             var brandSales = salesItems
                 .Where(x => x.Product.Brand != null)
                 .GroupBy(x => x.Product.Brand!.Name)
                 .Select(g => new DashboardBrandSalesDto {
                     Name = g.Key,
-                    Value = g.Sum(x => x.Quantity * x.Product.SalePrice)
+                    Value = g.Sum(x => x.Quantity * (x.UnitPrice ?? x.Product.SalePrice))
                 })
                 .OrderByDescending(x => x.Value)
                 .Take(5)
@@ -173,6 +176,12 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 .ToList();
 
             return new DashboardDto {
+                SalesRevenue = salesCurrent,
+                CostOfGoodsSold = costCurrent,
+                GrossProfit = salesCurrent - costCurrent,
+                ExpenseTotal = expensesCurrent,
+                NetProfit = earningsCurrent,
+                HasEstimatedProfit = salesInvoices.Any(x => x.SalesInvoiceItems.Any(i => i.IsPriceEstimated || i.IsCostEstimated || i.UnitPrice == null || i.CostTotal == null)),
                 MonthLabel = monthStart.ToString("MMMM yyyy"),
                 Kpis = new DashboardKpisDto {
                     Sales = new DashboardKpiItemDto {
@@ -208,7 +217,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
                         Title = "Low stock items",
                         Description = $"{lowStockCount} item(s) below the minimum stock.",
                         Tone = lowStockCount > 0 ? "danger" : "info",
-                        NavigateUrl = "../Inventory/index.html",
+                        NavigateUrl = "../Inventory/index.html?lowStock=true",
                         Count = lowStockCount
                     },
                     new() {
@@ -241,11 +250,11 @@ namespace PerfumeStore.Infrastructure.Repositories {
         }
 
         private static decimal GetSalesInvoiceTotal(Domain.Entities.SalesInvoice salesInvoice) {
-            return salesInvoice.AmountPaid + (salesInvoice.Debt != null && !salesInvoice.Debt.IsDeleted ? salesInvoice.Debt.Amount : 0m);
+            return salesInvoice.SalesInvoiceItems.Sum(x => x.Quantity * (x.UnitPrice ?? x.Product.SalePrice));
         }
 
         private static decimal GetPurchaseInvoiceTotal(Domain.Entities.PurchaseInvoice purchaseInvoice) {
-            return purchaseInvoice.AmountPaid + (purchaseInvoice.Debt != null && !purchaseInvoice.Debt.IsDeleted ? purchaseInvoice.Debt.Amount : 0m);
+            return purchaseInvoice.PurchaseInvoiceItems.Sum(x => x.Quantity * (x.UnitCost ?? x.Product.CostPrice));
         }
 
         private static decimal CalculatePercent(decimal current, decimal previous) {

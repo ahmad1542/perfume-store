@@ -8,6 +8,7 @@ namespace PerfumeStore.Application.Inventory.Dtos {
         public InventoryProfile() {
             CreateMap<InventoryBatch, InventoryBatchDto>();
             CreateMap<Domain.Entities.Inventory, InventoryDto>()
+                .ForMember(d => d.MinStock, opt => opt.MapFrom(s => s.Product.MinStock))
                 .ForMember(d => d.ProductName, opt => opt.MapFrom(s => s.Product.Name))
                 .ForMember(d => d.Batches, opt => opt.MapFrom(s => s.Product.InventoryBatches
                     .Where(b => b.RemainingQuantity > 0).OrderBy(b => b.ReceivedAt.Date).ThenBy(b => b.ID)));

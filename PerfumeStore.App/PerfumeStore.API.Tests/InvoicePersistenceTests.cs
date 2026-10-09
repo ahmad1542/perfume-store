@@ -156,11 +156,14 @@ public sealed class InvoicePersistenceTests : IAsyncLifetime {
     [Fact]
     public async Task FullySoldInvoiceCanBeCorrectedThroughHandler() {
         var sale = await Sell(4, 900);
+        var account = new MoneyAccount { AccountName = "Test account", CurrentBalance = 0 };
+        db.Add(account);
+        await db.SaveChangesAsync();
         var handler = new PerfumeStore.Application.SalesInvoices.Commands.UpdateSalesInvoice.UpdateSalesInvoiceCommandHandler(
             new SalesInvoicesRepository(db), new DebtsRepository(db), new MoneyAccountsRepository(db),
-            new InventoryRepository(db));
+            new InventoryRepository(db), new ProductsRepository(db));
         await handler.Handle(new PerfumeStore.Application.SalesInvoices.Commands.UpdateSalesInvoice.UpdateSalesInvoiceCommand {
-            ID = sale.ID, Date = sale.Date, Notes = "Corrected price",
+            ID = sale.ID, Date = sale.Date, Notes = "Corrected price", AmountPaid = 2550, MoneyAccountId = account.ID,
             Products = new Dictionary<int, int> { [product.ID] = 3 },
             UnitPrices = new Dictionary<int, decimal> { [product.ID] = 850 }
         }, CancellationToken.None);
@@ -168,6 +171,100 @@ public sealed class InvoicePersistenceTests : IAsyncLifetime {
         Assert.Equal(1, (await db.Inventory.SingleAsync()).Quantity);
         Assert.Equal(2250m, (await db.SalesInvoiceItems.SingleAsync()).CostTotal);
         Assert.Equal(850m, (await db.SalesInvoiceItems.SingleAsync()).UnitPrice);
+    }
+
+    [Theory]
+    [InlineData(110, 70, 40, 0)]
+    [InlineData(60, 20, 0, 10)]
+    [InlineData(70, 30, 0, 0)]
+    public async Task SaleCorrectionPreservesVoucherPaymentsAndRecordsCredit(decimal total, decimal originalDebt, decimal remaining, decimal credit) {
+        var customer = new Customer { Name = "Test customer" };
+        customer.ChangePhone("0599999998");
+        var account = new MoneyAccount { AccountName = "Cash", CurrentBalance = 70 };
+        db.AddRange(customer, account);
+        await db.SaveChangesAsync();
+        var sale = await Sell(1, 100);
+        sale.CustomerId = customer.Id;
+        sale.AmountPaid = 40;
+        sale.MoneyAccountId = account.ID;
+        sale.Debt = new Debt { Amount = 30, PersonId = customer.Id, Direction = DebtDirection.Receivable, SalesInvoiceId = sale.ID };
+        var voucher = new ReceiptVoucher { Amount = 30, CustomerId = customer.Id, MoneyAccountID = account.ID };
+        voucher.AppliedSalesInvoices.Add(new ReceiptVoucherSalesInvoice { SalesInvoiceId = sale.ID, AppliedAmount = 30 });
+        db.Add(voucher);
+        await db.SaveChangesAsync();
+        var handler = new PerfumeStore.Application.SalesInvoices.Commands.UpdateSalesInvoice.UpdateSalesInvoiceCommandHandler(
+            new SalesInvoicesRepository(db), new DebtsRepository(db), new MoneyAccountsRepository(db), new InventoryRepository(db), new ProductsRepository(db));
+        await Assert.ThrowsAsync<PerfumeStore.Domain.Exceptions.BusinessRuleException>(() => handler.Handle(
+            new PerfumeStore.Application.SalesInvoices.Commands.UpdateSalesInvoice.UpdateSalesInvoiceCommand {
+                ID = sale.ID, Date = sale.Date, CustomerId = customer.Id, AmountPaid = 41, MoneyAccountId = account.ID,
+                HasDebt = true, DebtAmount = originalDebt,
+                Products = new Dictionary<int, int> { [product.ID] = 1 }, UnitPrices = new Dictionary<int, decimal> { [product.ID] = total }
+            }, CancellationToken.None));
+        Assert.Equal(70, account.CurrentBalance);
+        Assert.Equal(30, sale.Debt.Amount);
+        await handler.Handle(new PerfumeStore.Application.SalesInvoices.Commands.UpdateSalesInvoice.UpdateSalesInvoiceCommand {
+            ID = sale.ID, Date = sale.Date, CustomerId = customer.Id, AmountPaid = 40, MoneyAccountId = account.ID,
+            HasDebt = true, DebtAmount = originalDebt,
+            Products = new Dictionary<int, int> { [product.ID] = 1 }, UnitPrices = new Dictionary<int, decimal> { [product.ID] = total }
+        }, CancellationToken.None);
+        db.ChangeTracker.Clear();
+        var saved = (await new SalesInvoicesRepository(db).GetByIdAsync(sale.ID))!;
+        Assert.Equal(remaining, saved.Debt!.Amount);
+        Assert.Equal(remaining == 0, saved.Debt.IsDeleted);
+        Assert.Equal(30, saved.ReceiptVoucherSalesInvoices.Sum(v => v.AppliedAmount));
+        Assert.Equal(70, (await db.MoneyAccounts.SingleAsync()).CurrentBalance);
+        var dto = new PerfumeStore.Application.SalesInvoices.Dtos.SalesInvoiceDetailsDto {
+            AmountPaid = saved.AmountPaid, DebtAmount = saved.Debt.Amount, AppliedVoucherPayments = 30,
+            Products = [new() { Quantity = 1, UnitPrice = total }]
+        };
+        Assert.Equal(originalDebt, dto.OriginalDebtAmount);
+        Assert.Equal(credit, dto.CreditRefundDue);
+    }
+
+    [Theory]
+    [InlineData(110, 70, 40, 0)]
+    [InlineData(60, 20, 0, 10)]
+    [InlineData(70, 30, 0, 0)]
+    public async Task PurchaseCorrectionPreservesVoucherPaymentsAndRecordsCredit(decimal total, decimal originalDebt, decimal remaining, decimal credit) {
+        var account = new MoneyAccount { AccountName = "Cash", CurrentBalance = 70 };
+        db.Add(account);
+        await db.SaveChangesAsync();
+        var sale = await Purchase(1, 100);
+        sale.SupplierId = supplier.Id;
+        sale.AmountPaid = 40;
+        sale.MoneyAccountId = account.ID;
+        sale.Debt = new Debt { Amount = 30, PersonId = supplier.Id, Direction = DebtDirection.Payable, PurchaseInvoiceId = sale.ID };
+        var voucher = new PaymentVoucher { Amount = 30, SupplierId = supplier.Id, MoneyAccountID = account.ID };
+        voucher.AppliedPurchaseInvoices.Add(new PaymentVoucherPurchaseInvoice { PurchaseInvoiceId = sale.ID, AppliedAmount = 30 });
+        db.Add(voucher);
+        await db.SaveChangesAsync();
+        var handler = new PerfumeStore.Application.PurchaseInvoices.Commands.UpdatePurchaseInvoice.UpdatePurchaseInvoiceCommandHandler(
+            new PurchaseInvoicesRepository(db), new DebtsRepository(db), new MoneyAccountsRepository(db), new ProductsRepository(db));
+        await Assert.ThrowsAsync<PerfumeStore.Domain.Exceptions.BusinessRuleException>(() => handler.Handle(
+            new PerfumeStore.Application.PurchaseInvoices.Commands.UpdatePurchaseInvoice.UpdatePurchaseInvoiceCommand {
+                ID = sale.ID, Date = sale.Date, SupplierId = supplier.Id, AmountPaid = 41, MoneyAccountId = account.ID,
+                HasDebt = true, DebtAmount = originalDebt,
+                Products = new Dictionary<int, int> { [product.ID] = 1 }, UnitCosts = new Dictionary<int, decimal> { [product.ID] = total }
+            }, CancellationToken.None));
+        Assert.Equal(70, account.CurrentBalance);
+        Assert.Equal(30, sale.Debt.Amount);
+        await handler.Handle(new PerfumeStore.Application.PurchaseInvoices.Commands.UpdatePurchaseInvoice.UpdatePurchaseInvoiceCommand {
+            ID = sale.ID, Date = sale.Date, SupplierId = supplier.Id, AmountPaid = 40, MoneyAccountId = account.ID,
+            HasDebt = true, DebtAmount = originalDebt,
+            Products = new Dictionary<int, int> { [product.ID] = 1 }, UnitCosts = new Dictionary<int, decimal> { [product.ID] = total }
+        }, CancellationToken.None);
+        db.ChangeTracker.Clear();
+        var saved = (await new PurchaseInvoicesRepository(db).GetByIdAsync(sale.ID))!;
+        Assert.Equal(remaining, saved.Debt!.Amount);
+        Assert.Equal(remaining == 0, saved.Debt.IsDeleted);
+        Assert.Equal(30, saved.PaymentVoucherPurchaseInvoices.Sum(v => v.AppliedAmount));
+        Assert.Equal(70, (await db.MoneyAccounts.SingleAsync()).CurrentBalance);
+        var dto = new PerfumeStore.Application.PurchaseInvoices.Dtos.PurchaseInvoiceDetailsDto {
+            AmountPaid = saved.AmountPaid, DebtAmount = saved.Debt.Amount, AppliedVoucherPayments = 30,
+            Products = [new() { Quantity = 1, UnitCost = total }]
+        };
+        Assert.Equal(originalDebt, dto.OriginalDebtAmount);
+        Assert.Equal(credit, dto.CreditRefundDue);
     }
 
     [Fact]
@@ -192,6 +289,59 @@ public sealed class InvoicePersistenceTests : IAsyncLifetime {
         Assert.Empty(await db.SalesCostAllocations.ToListAsync());
         Assert.Equal(4, (await db.Inventory.SingleAsync()).Quantity);
         Assert.Equal(4, await db.InventoryBatches.SumAsync(b => b.RemainingQuantity));
+    }
+
+    [Fact]
+    public async Task DashboardUsesSoldStockCostsAndSelectedMonthInsteadOfPurchaseSpending() {
+        await Purchase(2, 780);
+        await Sell(2, 850);
+        var account = new MoneyAccount { AccountName = "Test cash", CurrentBalance = 0 };
+        var type = new ExpenseType { Name = "Test expense" };
+        db.Expenses.Add(new Expense { Date = new DateTime(2026, 10, 6), Amount = 50,
+            ExpenseType = type, MoneyAccount = account });
+        await db.SaveChangesAsync();
+        var dashboard = await new DashboardRepository(db).GetAsync(2026, 10);
+        Assert.Equal(1700m, dashboard.SalesRevenue);
+        Assert.Equal(1500m, dashboard.CostOfGoodsSold);
+        Assert.Equal(200m, dashboard.GrossProfit);
+        Assert.Equal(50m, dashboard.ExpenseTotal);
+        Assert.Equal(150m, dashboard.NetProfit);
+        Assert.Equal(200m, dashboard.Profit.Values[4]);
+        Assert.Equal(-50m, dashboard.Profit.Values[5]);
+        Assert.Equal(dashboard.NetProfit, dashboard.Profit.Values.Sum());
+        var emptyMonth = await new DashboardRepository(db).GetAsync(2021, 1);
+        Assert.Equal(0m, emptyMonth.NetProfit);
+        Assert.Equal(31, emptyMonth.Profit.Values.Count);
+        Assert.All(emptyMonth.Profit.Values, x => Assert.Equal(0m, x));
+        var leapMonth = await new DashboardRepository(db).GetAsync(2024, 2);
+        Assert.Equal(29, leapMonth.Profit.Values.Count);
+    }
+
+    [Fact]
+    public async Task UnbalancedNewInvoicesAreRejectedWithoutChangingStockOrMoney() {
+        var account = new MoneyAccount { AccountName = "Settlement test cash", CurrentBalance = 100 };
+        db.MoneyAccounts.Add(account);
+        await db.SaveChangesAsync();
+        var salesHandler = new PerfumeStore.Application.SalesInvoices.Commands.CreateSalesInvoice.CreateSalesInvoiceCommandHandler(
+            new SalesInvoicesRepository(db), new MoneyAccountsRepository(db), new InventoryRepository(db), null!, new ProductsRepository(db));
+        await Assert.ThrowsAsync<PerfumeStore.Domain.Exceptions.BusinessRuleException>(() => salesHandler.Handle(
+            new PerfumeStore.Application.SalesInvoices.Commands.CreateSalesInvoice.CreateSalesInvoiceCommand {
+                AmountPaid = 75, MoneyAccountId = account.ID,
+                Products = new Dictionary<int, int> { [product.ID] = 1 },
+                UnitPrices = new Dictionary<int, decimal> { [product.ID] = 80 }
+            }, CancellationToken.None));
+        var purchaseHandler = new PerfumeStore.Application.PurchaseInvoices.Commands.CreatePurchaseInvoice.CreatePurchaseInvoiceCommandHandler(
+            new PurchaseInvoicesRepository(db), new MoneyAccountsRepository(db), null!, new ProductsRepository(db));
+        await Assert.ThrowsAsync<PerfumeStore.Domain.Exceptions.BusinessRuleException>(() => purchaseHandler.Handle(
+            new PerfumeStore.Application.PurchaseInvoices.Commands.CreatePurchaseInvoice.CreatePurchaseInvoiceCommand {
+                SupplierId = supplier.Id, AmountPaid = 75, MoneyAccountId = account.ID,
+                Products = new Dictionary<int, int> { [product.ID] = 1 },
+                UnitCosts = new Dictionary<int, decimal> { [product.ID] = 80 }
+            }, CancellationToken.None));
+        Assert.Empty(await db.SalesInvoices.ToListAsync());
+        Assert.Empty(await db.PurchaseInvoices.ToListAsync());
+        Assert.Equal(4, (await db.Inventory.SingleAsync()).Quantity);
+        Assert.Equal(100m, (await db.MoneyAccounts.SingleAsync()).CurrentBalance);
     }
 
     public async Task DisposeAsync() {

@@ -1,16 +1,23 @@
+using PerfumeStore.Application.Accounting;
 ﻿using MediatR;
 using PerfumeStore.Domain.Entities;
 using PerfumeStore.Domain.Exceptions;
 using PerfumeStore.Domain.Repositories;
 
 namespace PerfumeStore.Application.PurchaseInvoices.Commands.UpdatePurchaseInvoice {
-    public class UpdatePurchaseInvoiceCommandHandler(IPurchaseInvoicesRepository purchaseInvoicesRepository, IDebtsRepository debtsRepository, IMoneyAccountsRepository moneyAccountsRepository) : IRequestHandler<UpdatePurchaseInvoiceCommand> {
+    public class UpdatePurchaseInvoiceCommandHandler(IPurchaseInvoicesRepository purchaseInvoicesRepository, IDebtsRepository debtsRepository, IMoneyAccountsRepository moneyAccountsRepository, IProductsRepository productsRepository) : IRequestHandler<UpdatePurchaseInvoiceCommand> {
         public async Task Handle(UpdatePurchaseInvoiceCommand request, CancellationToken cancellationToken) {
 
             var purchaseInvoice = await purchaseInvoicesRepository.GetByIdAsync(request.ID);
 
             if (purchaseInvoice == null)
                 throw new NotFoundException(nameof(PurchaseInvoice), request.ID.ToString());
+
+            await InvoiceSettlement.EnsureAsync(productsRepository, request.Products, request.UnitCosts, true,
+                request.AmountPaid, request.HasDebt, request.DebtAmount,
+                purchaseInvoice.PurchaseInvoiceItems.ToDictionary(i => i.ProductID, i => i.UnitCost));
+            var voucherPayments = purchaseInvoice.PaymentVoucherPurchaseInvoices.Sum(v => v.AppliedAmount);
+            var remainingDebt = Math.Max(0m, (request.HasDebt ? request.DebtAmount ?? 0m : 0m) - voucherPayments);
 
             var oldAmountPaid = purchaseInvoice.AmountPaid;
             var oldMoneyAccountId = purchaseInvoice.MoneyAccountId;
@@ -54,7 +61,8 @@ namespace PerfumeStore.Application.PurchaseInvoices.Commands.UpdatePurchaseInvoi
             if (request.HasDebt && request.DebtAmount.HasValue && request.DebtAmount.Value > 0) {
                 if (purchaseInvoice.Debt != null) {
                     purchaseInvoice.Debt.Date = request.Date;
-                    purchaseInvoice.Debt.Amount = request.DebtAmount.Value;
+                    purchaseInvoice.Debt.Amount = remainingDebt;
+                    purchaseInvoice.Debt.IsDeleted = remainingDebt == 0;
                     purchaseInvoice.Debt.Notes = request.DebtNotes;
                     purchaseInvoice.Debt.PersonId = request.SupplierId;
                     purchaseInvoice.Debt.Direction = DebtDirection.Payable;
@@ -62,7 +70,8 @@ namespace PerfumeStore.Application.PurchaseInvoices.Commands.UpdatePurchaseInvoi
                 } else {
                     purchaseInvoice.Debt = new Debt {
                         Date = request.Date,
-                        Amount = request.DebtAmount.Value,
+                        Amount = remainingDebt,
+                        IsDeleted = remainingDebt == 0,
                         Notes = request.DebtNotes,
                         PersonId = request.SupplierId,
                         Direction = DebtDirection.Payable,
@@ -71,8 +80,8 @@ namespace PerfumeStore.Application.PurchaseInvoices.Commands.UpdatePurchaseInvoi
                 }
             } else {
                 if (purchaseInvoice.Debt != null) {
-                    await debtsRepository.SoftDeleteAsync(purchaseInvoice.Debt);
-                    purchaseInvoice.Debt = null;
+                    purchaseInvoice.Debt.IsDeleted = true;
+                    purchaseInvoice.Debt.Amount = 0;
                 }
             }
 

@@ -5,6 +5,8 @@
         public string ProductName { get; set; } = default!;
 
         public int Quantity { get; set; }
+        public int? MinStock { get; set; }
+        public bool IsLowStock => MinStock.HasValue && Quantity <= MinStock.Value;
         public List<InventoryBatchDto> Batches { get; set; } = [];
         public decimal StockCost => Batches.Sum(b => b.RemainingQuantity * b.UnitCost);
         public bool HasEstimatedCosts => Batches.Any(b => b.IsCostEstimated);

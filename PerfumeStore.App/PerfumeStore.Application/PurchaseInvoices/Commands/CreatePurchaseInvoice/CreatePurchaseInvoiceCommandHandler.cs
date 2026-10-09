@@ -1,11 +1,13 @@
+using PerfumeStore.Application.Accounting;
 ﻿using AutoMapper;
 using MediatR;
 using PerfumeStore.Domain.Entities;
 using PerfumeStore.Domain.Repositories;
 
 namespace PerfumeStore.Application.PurchaseInvoices.Commands.CreatePurchaseInvoice {
-    public class CreatePurchaseInvoiceCommandHandler(IPurchaseInvoicesRepository purchaseInvoicesRepository, IMoneyAccountsRepository moneyAccountsRepository, IMapper mapper) : IRequestHandler<CreatePurchaseInvoiceCommand, long> {
+    public class CreatePurchaseInvoiceCommandHandler(IPurchaseInvoicesRepository purchaseInvoicesRepository, IMoneyAccountsRepository moneyAccountsRepository, IMapper mapper, IProductsRepository productsRepository) : IRequestHandler<CreatePurchaseInvoiceCommand, long> {
         public async Task<long> Handle(CreatePurchaseInvoiceCommand request, CancellationToken cancellationToken) {
+            await InvoiceSettlement.EnsureAsync(productsRepository, request.Products, request.UnitCosts, true, request.AmountPaid, request.HasDebt, request.DebtAmount);
             var purchaseInvoice = mapper.Map<PurchaseInvoice>(request);
 
             MoneyAccount? account = null;
