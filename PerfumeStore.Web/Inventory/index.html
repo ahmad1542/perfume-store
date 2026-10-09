@@ -9,8 +9,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
 
-  <link rel="stylesheet" href="../assets/theme-dark.css" />
-  <link rel="stylesheet" href="inventory.css" />
+  <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-dropdowns" />
+  <link rel="stylesheet" href="inventory.css?v=20261009-low-stock-2" />
 </head>
 
 <body>
@@ -31,22 +31,25 @@
       <div class="page-header">
         <div>
           <h1 class="page-title">
-            Inventory <span id="countChip" class="count-chip">0</span>
+            <span id="inventoryTitle">Inventory</span> <span id="countChip" class="count-chip">0</span>
           </h1>
-          <p class="page-subtitle">Manage inventory here.</p>
+          <p id="inventorySubtitle" class="page-subtitle">Manage inventory here.</p>
         </div>
 
         <div class="list-tools">
+          <a id="stockFilterLink" href="index.html?lowStock=true" class="btn-secondary">Low stock only</a>
           <input id="searchInput" class="search-input" type="text" placeholder="Search..." />
           <a href="create.html" class="btn-primary">+ New Inventory Item</a>
         </div>
       </div>
 
+      <div id="lowStockSummary" class="stock-summary" role="status" hidden></div>
+
       <div id="emptyState" class="empty-state">
         <div class="empty-icon">📄</div>
-        <h2>No inventory yet</h2>
-        <p>Start by creating your first record.</p>
-        <a href="create.html" class="btn-primary">Create</a>
+        <h2 id="emptyTitle">No inventory yet</h2>
+        <p id="emptyDescription">Start by creating your first record.</p>
+        <a id="emptyCreate" href="create.html" class="btn-primary">Create</a>
       </div>
 
       <div id="pageMsg" class="hint"></div>
@@ -64,7 +67,7 @@
   <script src="../assets/endpoints.js"></script>
   <script src="../assets/common.js"></script>
   <script src="common.js"></script>
-  <script src="inventory.js"></script>
+  <script src="inventory.js?v=20261009-low-stock"></script>
   <script>loadList();</script>
 </body>
 

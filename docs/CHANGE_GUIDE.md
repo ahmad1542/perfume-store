@@ -67,7 +67,12 @@ prices, totals, and estimate labels. Sales details additionally show FIFO cost
 and gross profit. Inventory details show the remaining batches and their costs.
 
 The existing sales payment auto-fill remains, using the agreed line prices.
-The existing dashboard profit calculation remains separate from gross profit.
+The dashboard now shows monthly net profit: saved sale revenue minus FIFO cost
+of units sold minus expenses. A breakdown appears above the daily profit chart.
+Month and year selectors cover January 2021 through the current year. Sales and
+expense dates determine their reporting month; buying unsold stock no longer
+reduces profit. Historical estimates are labeled, while cash and stock alerts
+remain live. Invoice payment, debt, and stock allocation rules are unchanged.
 
 ## 4. Docker and phone access
 
@@ -114,3 +119,16 @@ deployment with persistent SQL Server storage, and GitHub Actions verification.
 Use this wording after verifying the finished project. Avoid unmeasured claims
 about request throughput or production scale: this application serves a personal
 inventory workflow.
+
+## Shared dropdowns and low-stock summary
+
+All pages now use a dark native dropdown palette with readable option text.
+The dashboard low-stock alert opens Inventory with `?lowStock=true`. This view
+shows only items whose quantity is at or below a configured minimum, including
+items exactly at the minimum. It shows quantity, minimum, stock status, and the
+out-of-stock count. Search stays within that view; Show all inventory clears it.
+No stock thresholds or inventory quantities are changed.
+
+## Invoice totals, original debt and correction credits
+
+Sales and purchase invoices reject a mismatch between saved item totals and payment plus original debt, before changing stock or balances. Edit forms show original debt; remaining debt subtracts applied vouchers. Example: total110, originally paid40, original debt70, vouchers30 -> remaining40. If original debt becomes20 with vouchers30, remaining debt is0 and credit/refund due is10. The invoice view offers a dismissible reminder; credit stays visible and no cash refund or automatic credit application occurs. Dismissal is specific to the invoice and current amounts, stored in this browser. Historical mismatches are not automatically repriced.

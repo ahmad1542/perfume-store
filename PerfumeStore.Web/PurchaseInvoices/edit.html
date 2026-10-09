@@ -9,7 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
 
-  <link rel="stylesheet" href="../assets/theme-dark.css" />
+  <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-original-debt" />
   <link rel="stylesheet" href="purchaseinvoices.css" />
 </head>
 
@@ -52,7 +52,7 @@
           </div>
           <hr style="border-color: transparent;">
           <div class="form-group">
-            <label for="AmountPaid">Amount Paid <span class="req">*</span></label>
+            <label for="AmountPaid">Paid at invoice creation <span class="req">*</span></label>
             <input id="AmountPaid" type="number" placeholder="Amount Paid" required />
           </div>
           <hr style="border-color: transparent;">
@@ -77,7 +77,7 @@
           <div id="debt-group">
             <hr style="border-color: transparent;">
             <div class="form-group">
-              <label for="DebtAmount">Debt Amount <span class="req">*</span></label>
+              <label for="DebtAmount">Original Debt Amount <span class="req">*</span></label>
               <input id="DebtAmount" type="number" placeholder="Debt Amount" />
             </div>
             <hr style="border-color: transparent;">
@@ -88,6 +88,7 @@
           </div>
 
           <hr style="border-color: rgba(255,255,255,.08); margin: 18px 0;">
+          <div id="invoiceBalance" class="invoice-balance" data-purchase="true" role="status" aria-live="polite"></div>
           <h3 style="margin:0 0 10px;font-weight:900;">Items</h3>
           <p class="hint">Add products, quantities, and the agreed unit price</p>
           <div class="table-wrapper table-card" style="margin-top:10px;">
@@ -124,7 +125,8 @@
   <script src="../assets/endpoints.js"></script>
   <script src="../assets/common.js"></script>
   <script src="common.js"></script>
-  <script src="edit.js"></script>
+  <script src="../assets/invoice-accounting.js?v=20261009-original-debt"></script>
+  <script src="edit.js?v=20261009-original-debt"></script>
   <script>initEdit();</script>
 </body>
 

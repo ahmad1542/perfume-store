@@ -1,3 +1,5 @@
+let productLoaded = false;
+
 async function loadBrands() {
     const brandSelect = $("brandId");
     brandSelect.innerHTML = `<option value="">Loading...</option>`;
@@ -10,6 +12,7 @@ async function loadBrands() {
             brands.map(b => `<option value="${b.id ?? b.ID}">${escapeHtml(b.name ?? b.Name)}</option>`).join("");
     } catch {
         brandSelect.innerHTML = `<option value="">Failed to load</option>`;
+        throw new Error('Failed to load brands. Refresh the page before editing.');
     }
 }
 
@@ -27,6 +30,36 @@ async function loadCategories(selectId = null) {
         if (selectId != null) catSelect.value = String(selectId);
     } catch {
         catSelect.innerHTML = `<option value="">Failed to load</option>`;
+        throw new Error('Failed to load categories. Refresh the page before editing.');
+    }
+}
+
+async function loadProduct() {
+    productLoaded = false;
+    $("btnSave").disabled = true;
+    $("productFields").disabled = true;
+    setMsg("pageMsg", "Loading product...");
+    try {
+        const id = getQueryParam("id");
+        if (!id) throw new Error('Missing product ID. Open Edit from the Products page.');
+        const [product] = await Promise.all([
+            apiGetJson(`${PRODUCTS_API}/${encodeURIComponent(id)}`), loadBrands(), loadCategories()
+        ]);
+        $("productName").value = product.name ?? '';
+        $("capacity").value = product.capacity ?? '';
+        $("salePrice").value = product.salePrice ?? '';
+        $("costPrice").value = product.costPrice ?? '';
+        $("minStock").value = product.minStock ?? '';
+        $("brandId").value = product.brandID == null ? '' : String(product.brandID);
+        $("categoryId").value = String(product.productCategoryID);
+        if (!$("categoryId").value || (product.brandID != null && !$("brandId").value))
+            throw new Error('The saved brand or category could not be selected. Refresh the page before editing.');
+        productLoaded = true;
+        $("productFields").disabled = false;
+        $("btnSave").disabled = false;
+        setMsg("pageMsg", "Current details loaded. Change only what you need.");
+    } catch (error) {
+        setMsg("pageMsg", getFriendlyMessage(error) ?? error.message ?? 'Failed to load product.', true);
     }
 }
 
@@ -72,6 +105,7 @@ async function createCategory() {
 }
 
 async function updateProduct() {
+    if (!productLoaded) return;
     setMsg("pageMsg", "");
 
     const productId = getQueryParam("id");
@@ -128,7 +162,7 @@ async function updateProduct() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-    await Promise.all([loadBrands(), loadCategories()]);
+    await loadProduct();
 
     $("btnAddCategory").addEventListener("click", openCategoryModal);
     $("btnCloseCategoryModal").addEventListener("click", closeCategoryModal);

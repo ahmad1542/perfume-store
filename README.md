@@ -20,7 +20,7 @@ owner using localhost or a phone on the same trusted network.
   invoice is edited. Changing an invoice's displayed date does not move that sale
   ahead of previously recorded sales in the stock ledger.
 - Sales details show line revenue, FIFO cost, and **gross profit**. Gross profit
-  excludes expenses and is separate from the existing dashboard profit formula.
+  excludes expenses. Dashboard **net profit** subtracts expenses from gross profit.
 - Inventory details show remaining units and cost for each batch.
 - Direct stock additions require an entered `AddedUnitCost` for the extra units.
   Reducing the count removes the oldest remaining units. Purchases should normally
@@ -162,11 +162,15 @@ uses the product default; an omitted edit price preserves the saved price.
 ```
 
 Continue supplying the existing date, customer/supplier, payment, account, debt,
-and notes fields as before. No new relationship between payment/debt amounts
-and line totals is enforced. The sales-create form still auto-fills Amount Paid
-when its items change, now using the agreed line prices. Voucher application,
-debt rules, balance-update timing, and dashboard profit calculations have not
-been rewritten. Sales-edit stock validation now includes units returned from
+and notes fields. Creation and editing require line totals to equal the original
+payment plus original debt (or payment alone when Has Debt is unchecked).
+Invoice edits use original debt; later voucher payments reduce the remaining
+debt separately. Excess voucher payments after a correction are displayed as
+credit/refund due, with a dismissible reminder on the invoice view. Dismissal
+is remembered in this browser and does not remove the credit information.
+Credits never automatically change a money account or apply to another invoice.
+Sales-create still auto-fills payment from agreed prices. Sales-edit stock
+validation includes units returned from
 the invoice being corrected, so a fully sold invoice can still be edited.
 
 Expected API errors return Problem Details with a trace ID. Missing resources
@@ -187,3 +191,14 @@ and completed functionality, rather than claim unmeasured performance.
 
 See [the change walkthrough](docs/CHANGE_GUIDE.md) for an explanation of each
 group of changes and examples to try when reviewing the project.
+
+## Dashboard month selection and profit
+
+Choose a month and year from January 2021 through the current year. The default
+is the current month. Sales revenue uses saved customer-specific line prices;
+cost of units sold uses the saved FIFO cost totals. Net profit equals sales
+revenue minus cost of units sold minus expenses for the selected month. Stock
+purchases remain a separate KPI and do not reduce profit until those units sell.
+The daily chart shows individual days, whose values sum to monthly net profit.
+Historical estimates are marked. Cash balances and stock/debt alerts stay live.
+API: `GET /api/Dashboard?year=2026&month=10`; omitted fields use the current period.

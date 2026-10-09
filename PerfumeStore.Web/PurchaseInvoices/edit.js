@@ -311,6 +311,7 @@ function rebuildItemsFromUI() {
       ? `${items.length} item(s) ready.`
       : "No items selected yet.";
   }
+  if (typeof updateInvoiceBalance === "function") updateInvoiceBalance();
 }
 
 async function initEdit() {
@@ -356,7 +357,8 @@ async function initEdit() {
       );
     }
 
-    const debtAmountValue = item.DebtAmount ?? item.debtAmount ?? "";
+    window._appliedVoucherPayments = Number(item.appliedVoucherPayments ?? item.AppliedVoucherPayments ?? 0);
+    const debtAmountValue = item.originalDebtAmount ?? item.OriginalDebtAmount ?? item.DebtAmount ?? item.debtAmount ?? "";
     const hasDebtValue =
       item.HasDebt ??
       item.hasDebt ??
@@ -443,8 +445,11 @@ async function updateItem(id) {
 
   try {
     const body = buildBodyFromForm();
+    const balanceError = invoiceSettlementMessage(body, true);
+    if (balanceError) { setMsg("pageMsg", balanceError, true); return; }
     await apiSendJson(`${API}/${encodeURIComponent(id)}`, "PATCH", body);
-    window.location.href = "index.html";
+    window.location.href = Number(window._appliedVoucherPayments || 0) > Number(body.DebtAmount || 0)
+      ? 'view.html?id=' + encodeURIComponent(id) : 'index.html';
   } catch (e) {
     const validationMsg = getFriendlyMessage(e);
 

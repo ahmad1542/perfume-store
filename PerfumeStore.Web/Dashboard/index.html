@@ -8,8 +8,8 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="../assets/theme-dark.css" />
-    <link rel="stylesheet" href="dashboard.css" />
+    <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-dropdowns" />
+    <link rel="stylesheet" href="dashboard.css?v=20261009-profit-3" />
 </head>
 
 <body>
@@ -60,13 +60,13 @@
                     <div>
                         <div style="font-size:1.25rem; font-weight:900;">Dashboard</div>
                         <div style="color:rgba(232,238,252,.65); font-size:.9rem;">
-                            This month performance • Sales, purchases, and earnings
+                            Selected month • Sales, purchases, and net profit
                         </div>
                     </div>
                 </div>
 
                 <div class="d-flex gap-2 align-items-center">
-                    <span class="chip"><i class="bi bi-calendar3"></i> <span id="monthLabel">This Month</span></span>
+                    <div class="period-selectors"><label for="dashboardMonth">Month</label><select id="dashboardMonth" class="period-select"></select><label for="dashboardYear">Year</label><select id="dashboardYear" class="period-select"></select></div><span class="chip"><i class="bi bi-calendar3"></i> <span id="monthLabel">This Month</span></span>
                 </div>
             </div>
 
@@ -101,12 +101,12 @@
                 <div class="col-12 col-md-6 col-xl-3">
                     <div class="cardx cardx-kpi cardx-kpi-earnings">
                         <div class="card-headerx">
-                            <div class="kpi-title"><i class="bi bi-graph-up"></i> Earnings (Month)</div>
+                            <div class="kpi-title"><i class="bi bi-graph-up"></i> Net Profit (Month)</div>
                             <span class="delta up" id="earningsDelta"><i class="bi bi-arrow-up-right"></i> +0.0%</span>
                         </div>
                         <div class="card-bodyx">
                             <div class="kpi-value" id="earningsValue">₪0</div>
-                            <div class="kpi-sub">Net profit after purchases and expenses</div>
+                            <div class="kpi-sub">Sales minus cost of units sold and expenses</div>
                         </div>
                     </div>
                 </div>
@@ -127,65 +127,51 @@
 
             <div class="row g-3">
                 <div class="col-12 col-xl-8">
-                    <div class="cardx mb-3">
-                        <div class="card-headerx">
-                            <div style="font-weight:800;">Sales vs Purchases (Daily)</div>
-                            <div class="d-flex gap-2">
-                                <button class="btnx" id="btnRefresh"><i class="bi bi-arrow-repeat"></i></button>
-                            </div>
-                        </div>
-                        <div class="card-bodyx">
-                            <canvas id="salesPurchasesChart" height="110"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-12 col-lg-6">
-                            <div class="cardx">
-                                <div class="card-headerx">
-                                    <div style="font-weight:800;">Profit Trend</div>
-                                    <span class="chip"><i class="bi bi-activity"></i> Month</span>
-                                </div>
-                                <div class="card-bodyx">
-                                    <canvas id="profitChart" height="140"></canvas>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-lg-6">
-                            <div class="cardx">
-                                <div class="card-headerx">
-                                    <div style="font-weight:800;">Sales by Brand</div>
-                                    <span class="chip"><i class="bi bi-star"></i> Top 5</span>
-                                </div>
-                                <div class="card-bodyx">
-                                    <canvas id="brandChart" height="140"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <section class="cardx dashboard-panel h-100">
+                        <div class="card-headerx"><h2>Sales vs Purchases</h2><button class="btnx" id="btnRefresh" aria-label="Refresh dashboard" title="Refresh dashboard"><i class="bi bi-arrow-repeat"></i></button></div>
+                        <div class="card-bodyx"><p class="chart-caption">Daily totals · Hover or tap near a day to see both amounts.</p><div class="chart-frame"><canvas id="salesPurchasesChart" aria-label="Daily sales and purchases" role="img"></canvas></div></div>
+                    </section>
                 </div>
-
                 <div class="col-12 col-xl-4">
-                    <div class="cardx mb-3">
-                        <div class="card-headerx">
-                            <div style="font-weight:800;">Alerts & To-Do</div>
-                            <span class="chip"><i class="bi bi-bell"></i> Live</span>
+                    <section class="cardx dashboard-panel h-100">
+                        <div class="card-headerx"><h2>Alerts &amp; To-Do</h2><span class="chip"><i class="bi bi-bell"></i> Live</span></div>
+                        <div class="card-bodyx"><div class="d-grid gap-2" id="alertsList"></div></div>
+                    </section>
+                </div>
+                <div class="col-12">
+                    <section class="cardx dashboard-panel">
+                        <div class="card-headerx"><h2>Monthly Profit</h2><span class="chip">Selected month</span></div>
+                        <div class="card-bodyx profit-layout">
+                            <div class="profit-summary">
+                                <div class="profit-total-label">Whole month net profit</div>
+                                <div id="monthNetProfit" class="kpi-value">—</div>
+                                <dl class="profit-breakdown">
+                                    <div><dt>Sales revenue</dt><dd id="profitRevenue">—</dd></div>
+                                    <div><dt>Cost of units sold (FIFO)</dt><dd id="profitCost">—</dd></div>
+                                    <div class="profit-subtotal"><dt>Gross profit</dt><dd id="profitGross">—</dd></div>
+                                    <div><dt>Expenses</dt><dd id="profitExpenses">—</dd></div>
+                                </dl>
+                                <p id="profitEstimate" class="kpi-sub" hidden>Includes estimated historical prices or costs.</p>
+                            </div>
+                            <div class="profit-daily">
+                                <h3>Daily Net Profit</h3>
+                                <p class="chart-caption">Each point shows that day's profit after the cost of sold units and expenses.</p>
+                                <div class="chart-frame"><canvas id="profitChart" aria-label="Net profit for each day of the selected month" role="img"></canvas></div>
+                            </div>
                         </div>
-                        <div class="card-bodyx">
-                            <div class="d-grid gap-2" id="alertsList"></div>
-                        </div>
-                    </div>
-
-                    <div class="cardx">
-                        <div class="card-headerx">
-                            <div style="font-weight:800;">Expense Breakdown</div>
-                            <span class="chip"><i class="bi bi-list-ul"></i> Month</span>
-                        </div>
-                        <div class="card-bodyx">
-                            <div id="expenseBreakdownList" class="expense-breakdown-list"></div>
-                        </div>
-                    </div>
+                    </section>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <section class="cardx dashboard-panel h-100">
+                        <div class="card-headerx"><h2>Sales by Brand</h2><span class="chip">Top 5</span></div>
+                        <div class="card-bodyx"><p class="chart-caption">Sales revenue in the selected month.</p><div class="chart-frame chart-frame-small"><canvas id="brandChart" aria-label="Sales revenue by brand" role="img"></canvas></div></div>
+                    </section>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <section class="cardx dashboard-panel h-100">
+                        <div class="card-headerx"><h2>Expense Breakdown</h2><span class="chip">Selected month</span></div>
+                        <div class="card-bodyx"><div class="expense-total"><span>Total expenses</span><strong id="expenseTotal">—</strong></div><div id="expenseBreakdownList" class="expense-breakdown-list"></div></div>
+                    </section>
                 </div>
 
                 <div class="col-12">
@@ -228,7 +214,7 @@
     <script src="../assets/common.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="dashboard.js"></script>
+    <script src="dashboard.js?v=20261009-profit-3"></script>
 </body>
 
 </html>

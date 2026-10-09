@@ -23,6 +23,8 @@ async function createItem() {
   setMsg('pageMsg', 'Saving...', false);
   try {
     const body = buildBodyFromForm();
+    const settlementError = invoiceSettlementMessage(body, false);
+    if (settlementError) { setMsg('pageMsg', settlementError, true); return; }
 
     if (body.HasDebt && Number(body.DebtAmount || 0) > 0 && !body.CustomerId) {
       setMsg(

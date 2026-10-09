@@ -132,3 +132,13 @@
   transition: background 0.15s ease, border-color 0.15s ease;
   background-color: #0b1220;
 }
+
+.stock-summary { padding: 16px 18px; margin-bottom: 16px; border: 1px solid rgba(245,185,112,.35); border-radius: 12px; background: rgba(245,185,112,.08); color: #f5d7ad; }
+.stock-status { display: inline-block; border: 1px solid rgba(245,185,112,.35); border-radius: 8px; padding: 4px 8px; color: #f5d7ad; background: rgba(245,185,112,.08); }
+.stock-status.out { color: #ffb5b5; border-color: rgba(255,139,139,.4); background: rgba(255,139,139,.1); }
+
+.page-header { flex-wrap: wrap; }
+.list-tools > a { white-space: nowrap; }
+.list-tools { flex-wrap: wrap; }
+.table-wrapper { overflow-x: auto; }
+@media (max-width: 700px) { .list-tools { width: 100%; } }

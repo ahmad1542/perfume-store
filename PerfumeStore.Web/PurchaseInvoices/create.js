@@ -21,6 +21,8 @@ async function createItem() {
   setMsg('pageMsg', 'Saving...', false);
   try {
     const body = buildBodyFromForm();
+    const settlementError = invoiceSettlementMessage(body, true);
+    if (settlementError) { setMsg('pageMsg', settlementError, true); return; }
     await apiSendJson(API, 'POST', body);
     window.location.href = 'index.html';
   } catch (e) {
@@ -266,3 +268,4 @@ function rebuildItemsFromUI() {
   const msg = $("itemsMsg");
   if (msg) msg.textContent = items.length ? `${items.length} item(s) ready.` : "No items selected yet.";
 }
+  if (typeof updateInvoiceBalance === "function") updateInvoiceBalance();

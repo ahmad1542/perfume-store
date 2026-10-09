@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Edit Product - Memento Perfume</title>
-    <link rel="stylesheet" href="../assets/theme-dark.css" />
+    <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-dropdowns" />
     <link rel="stylesheet" href="products.css" />
 </head>
 
@@ -37,6 +37,7 @@
             <div class="form-card">
                 <form id="updateProductForm" action="#" method="post">
 
+                    <fieldset id="productFields" disabled style="border:0;padding:0;margin:0;min-width:0;">
                     <div class="form-grid">
 
                         <div class="form-group">
@@ -96,8 +97,9 @@
 
                     </div>
 
+                    </fieldset>
                     <div class="form-actions">
-                        <button id="btnSave" type="button" class="btn-primary">Save Product</button>
+                        <button id="btnSave" type="button" class="btn-primary" disabled>Save Product</button>
                         <a href="../Products/index.html" class="btn-light">Cancel</a>
                         <div id="pageMsg" class="hint"></div>
                     </div>
@@ -141,7 +143,7 @@
     <script src="../assets/endpoints.js"></script>
     <script src="../assets/common.js"></script>
     <script src="common.js"></script>
-    <script src="edit.js"></script>
+    <script src="edit.js?v=20261009-prefill"></script>
 
 </body>
 

@@ -326,3 +326,38 @@ body {
         align-items: stretch;
     }
 }
+
+.period-selectors { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.period-select { background: #0e1833; color: #e8eefc; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; padding: 8px 10px; }
+.period-select:focus { outline: 2px solid #61dafb; outline-offset: 2px; }
+.profit-summary { margin-bottom: 20px; }
+.profit-total-label { color: rgba(232,238,252,.7); font-size: .9rem; }
+.profit-breakdown { margin: 16px 0 0; }
+.profit-breakdown > div { display: flex; justify-content: space-between; gap: 14px; padding: 8px 0; }
+.profit-breakdown dt { font-weight: 500; color: rgba(232,238,252,.75); }
+.profit-breakdown dd { margin: 0; font-weight: 700; white-space: nowrap; }
+.profit-subtotal { border-top: 1px solid rgba(255,255,255,.12); }
+
+.dashboard-panel h2 { margin: 0; font-size: 1rem; font-weight: 800; }
+.dashboard-panel h3 { margin: 0 0 8px; font-size: 1rem; font-weight: 700; }
+.chart-caption { margin: 0 0 16px; color: rgba(232,238,252,.65); font-size: .85rem; }
+.chart-frame { position: relative; height: 280px; min-width: 0; }
+.chart-frame-small { height: 250px; }
+.profit-layout { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); gap: 32px; }
+.profit-summary { margin: 0; padding-right: 28px; border-right: 1px solid rgba(255,255,255,.1); }
+.profit-summary .kpi-value { margin-top: 6px; font-size: 2.25rem; font-variant-numeric: tabular-nums; }
+.profit-breakdown dd { font-variant-numeric: tabular-nums; }
+.profit-daily { min-width: 0; }
+.expense-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.expense-total strong { font-size: 1.4rem; }
+.expense-row { gap: 16px; }
+@media (max-width: 767px) {
+    .profit-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .profit-summary { padding-right: 0; padding-bottom: 24px; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .chart-frame { height: 240px; }
+}
+
+.content { min-width: 0; }
+.sidebar { flex-shrink: 0; }
+.cardx-kpi { height: 100%; }
+.topbar > .d-flex { flex-wrap: wrap; }
