@@ -46,6 +46,8 @@ namespace PerfumeStore.Application.Dashboard.Dtos {
     public class DashboardBrandSalesDto {
         public string Name { get; set; } = string.Empty;
         public decimal Value { get; set; }
+        public decimal GrossProfit { get; set; }
+        public bool IsProfitEstimated { get; set; }
     }
 
     public class DashboardExpenseBreakdownDto {
@@ -66,6 +68,7 @@ namespace PerfumeStore.Application.Dashboard.Dtos {
         public DateTime Date { get; set; }
         public string Type { get; set; } = string.Empty;
         public string Reference { get; set; } = string.Empty;
+        public string? ProductNames { get; set; }
         public string Party { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public string Status { get; set; } = string.Empty;

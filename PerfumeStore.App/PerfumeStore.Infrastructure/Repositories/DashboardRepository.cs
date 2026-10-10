@@ -154,7 +154,10 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 .GroupBy(x => x.Product.Brand!.Name)
                 .Select(g => new DashboardBrandSalesDto {
                     Name = g.Key,
-                    Value = g.Sum(x => x.Quantity * (x.UnitPrice ?? x.Product.SalePrice))
+                    Value = g.Sum(x => x.Quantity * (x.UnitPrice ?? x.Product.SalePrice)),
+                    GrossProfit = g.Sum(x => x.Quantity * (x.UnitPrice ?? x.Product.SalePrice)
+                        - (x.CostTotal ?? x.Quantity * x.Product.CostPrice)),
+                    IsProfitEstimated = g.Any(x => x.IsPriceEstimated || x.IsCostEstimated || x.UnitPrice == null || x.CostTotal == null)
                 })
                 .OrderByDescending(x => x.Value)
                 .Take(5)
@@ -277,6 +280,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 Date = x.Date,
                 Type = "Sale Invoice",
                 Reference = $"#SI-{x.ID}",
+                ProductNames = string.Join(", ", x.SalesInvoiceItems.Select(i => i.Product.Name).Distinct()),
                 Party = x.Customer?.Name ?? "Walk-in customer",
                 Amount = GetSalesInvoiceTotal(x),
                 Status = x.Debt != null && !x.Debt.IsDeleted && x.Debt.Amount > 0 ? "Unpaid" : "Paid",
@@ -287,6 +291,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 Date = x.Date,
                 Type = "Purchase Invoice",
                 Reference = $"#PI-{x.ID}",
+                ProductNames = string.Join(", ", x.PurchaseInvoiceItems.Select(i => i.Product.Name).Distinct()),
                 Party = x.Supplier?.Name ?? "Supplier",
                 Amount = GetPurchaseInvoiceTotal(x),
                 Status = x.Debt != null && !x.Debt.IsDeleted && x.Debt.Amount > 0 ? "Unpaid" : "Paid",

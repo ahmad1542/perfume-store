@@ -293,6 +293,7 @@ public sealed class InvoicePersistenceTests : IAsyncLifetime {
 
     [Fact]
     public async Task DashboardUsesSoldStockCostsAndSelectedMonthInsteadOfPurchaseSpending() {
+        product.Brand = new Brand { Name = "Test brand" };
         await Purchase(2, 780);
         await Sell(2, 850);
         var account = new MoneyAccount { AccountName = "Test cash", CurrentBalance = 0 };
@@ -304,6 +305,12 @@ public sealed class InvoicePersistenceTests : IAsyncLifetime {
         Assert.Equal(1700m, dashboard.SalesRevenue);
         Assert.Equal(1500m, dashboard.CostOfGoodsSold);
         Assert.Equal(200m, dashboard.GrossProfit);
+        var brand = Assert.Single(dashboard.Brands);
+        Assert.Equal(1700m, brand.Value);
+        Assert.Equal(200m, brand.GrossProfit);
+        Assert.True(brand.IsProfitEstimated);
+        Assert.Equal("Xerjoff Naxos", Assert.Single(dashboard.Activity.Where(a => a.Type == "Sale Invoice")).ProductNames);
+        Assert.Equal("Xerjoff Naxos", Assert.Single(dashboard.Activity.Where(a => a.Type == "Purchase Invoice")).ProductNames);
         Assert.Equal(50m, dashboard.ExpenseTotal);
         Assert.Equal(150m, dashboard.NetProfit);
         Assert.Equal(200m, dashboard.Profit.Values[4]);
@@ -315,6 +322,28 @@ public sealed class InvoicePersistenceTests : IAsyncLifetime {
         Assert.All(emptyMonth.Profit.Values, x => Assert.Equal(0m, x));
         var leapMonth = await new DashboardRepository(db).GetAsync(2024, 2);
         Assert.Equal(29, leapMonth.Profit.Values.Count);
+    }
+
+    [Fact]
+    public async Task CategoryLookupAndRenamePreserveProductAssignmentAndDescription() {
+        var config = new AutoMapper.MapperConfiguration(c => c.AddProfile<PerfumeStore.Application.ProductCategories.Dtos.ProductCategoriesProfile>(),
+            Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance);
+        var mapper = config.CreateMapper();
+        var repository = new ProductCategoriesRepository(db);
+        var categoryId = product.ProductCategoryID;
+        var category = (await repository.GetByIdAsync(categoryId))!;
+        category.Description = "Keep this description";
+        await db.SaveChangesAsync();
+        var lookup = new PerfumeStore.Application.ProductCategories.Queries.GetProductCategoryById.GetProductCategoryByIdQueryHandler(repository, mapper);
+        var before = await lookup.Handle(new(categoryId), CancellationToken.None);
+        Assert.Equal("Perfume", before.Name);
+        var rename = new PerfumeStore.Application.ProductCategories.Commands.UpdateProductCategory.UpdateProductCategoryCommandHandler(repository, mapper);
+        await rename.Handle(new(categoryId) { Name = "Designer", Description = before.Description }, CancellationToken.None);
+        db.ChangeTracker.Clear();
+        var after = await lookup.Handle(new(categoryId), CancellationToken.None);
+        Assert.Equal("Designer", after.Name);
+        Assert.Equal("Keep this description", after.Description);
+        Assert.Equal(categoryId, (await db.Products.SingleAsync()).ProductCategoryID);
     }
 
     [Fact]

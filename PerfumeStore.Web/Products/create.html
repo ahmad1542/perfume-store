@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create Product - Memento Perfume</title>
     <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-dropdowns" />
-    <link rel="stylesheet" href="../Products/products.css" />
+    <link rel="stylesheet" href="../Products/products.css?v=20261010-category" />
 </head>
 
 <body>
@@ -86,7 +86,8 @@
                         <div class="form-group category-inline">
                             <div class="category-label-row">
                                 <label for="categoryId">Category <span class="req">*</span></label>
-                                <button type="button" id="btnAddCategory" class="btn-mini">+ Add</button>
+                                <button type="button" id="btnRenameCategory" class="btn-mini">Rename</button>
+                            <button type="button" id="btnAddCategory" class="btn-mini">+ Add</button>
                             </div>
 
                             <select id="categoryId" name="categoryId" required>
@@ -139,6 +140,15 @@
 
         </div>
     </main>
+ <dialog id="renameCategoryDialog" class="modal-card" aria-labelledby="renameCategoryTitle">
+   <div class="modal-header"><h3 id="renameCategoryTitle">Rename category</h3></div>
+   <form id="renameCategoryForm" class="modal-body">
+     <div class="form-group"><label for="renameCategoryName">Category name</label><input id="renameCategoryName" type="text" minlength="3" maxlength="100" required /></div>
+     <p class="hint">This name changes for all products using this category.</p>
+     <div class="modal-actions"><button id="btnSaveCategoryName" type="submit" class="btn-primary">Save name</button><button id="btnCancelCategoryRename" type="button" class="btn-light">Cancel</button></div>
+     <div id="renameCategoryMsg" class="hint" role="status"></div>
+   </form>
+ </dialog>
 
     <script src="../assets/api-config.js"></script>
     <script src="../assets/endpoints.js"></script>
@@ -146,6 +156,7 @@
     <script src="common.js"></script>
     <script src="../Brands/common.js"></script>
     <script src="create.js"></script>
+<script src="category-rename.js?v=20261010-category"></script>
 </body>
 
 </html>

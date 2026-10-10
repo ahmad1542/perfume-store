@@ -221,3 +221,6 @@
     grid-template-columns: 1fr;
   }
 }
+#renameCategoryDialog::backdrop { background: rgba(0,0,0,.65); }
+#renameCategoryDialog { color: #e8eefc; padding: 0; max-height: 90vh; }
+#renameCategoryDialog label { color: #e8eefc; }

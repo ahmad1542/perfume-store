@@ -12,3 +12,16 @@ test('profit summary binds the API amounts and daily charts use broad hover targ
  const options=c.chartOptions(true);assert.equal(options.interaction.mode,'index');assert.equal(options.interaction.intersect,false);assert.equal(options.maintainAspectRatio,false);
  assert.equal(options.plugins.tooltip.callbacks.label({dataset:{label:'Sales'},parsed:{y:75}}),'Sales: ₪75');
 });
+
+test('brand chart compares sales and FIFO profit without stacking and preserves losses',()=>{
+ const charts=[];const c=vm.createContext({document:{getElementById:id=>id.endsWith('Chart')?{id}:null},Chart:function(_,config){charts.push(config);},console});
+ vm.runInContext(source,c);
+ c.renderCharts({brands:[{name:'Brand',value:75,grossProfit:-5,isProfitEstimated:true}]});
+ const brand=charts.at(-1);assert.equal(brand.type,'bar');
+ assert.deepEqual(Array.from(brand.data.datasets[0].data),[75]);
+ assert.deepEqual(Array.from(brand.data.datasets[1].data),[-5]);
+ assert.notEqual(brand.data.datasets[0].backgroundColor,brand.data.datasets[1].backgroundColor);
+ assert.ok(!brand.options.scales?.y?.stacked);
+ assert.equal(brand.options.interaction.intersect,false);
+ assert.match(brand.options.plugins.tooltip.callbacks.afterBody([{dataIndex:0}]),/estimated/);
+});

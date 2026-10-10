@@ -156,7 +156,7 @@ function renderActivity(activity) {
     tr.innerHTML = `
       <td>${escapeHtml(formatDate(item.date))}</td>
       <td>${escapeHtml(item.type)}</td>
-      <td>${escapeHtml(item.reference)}</td>
+      <td>${escapeHtml(item.productNames || item.reference)}</td>
       <td>${escapeHtml(item.party || '-')}</td>
       <td class="text-end">${fmtMoney(item.amount)}</td>
       <td>${buildStatusBadge(item.status)}</td>
@@ -230,9 +230,25 @@ function renderCharts(data) {
     type: 'bar',
     data: {
       labels: (data.brands || []).map(x => x.name),
-      datasets: [{ label: 'Sales', backgroundColor: 'rgba(97,218,251,.45)', borderColor: '#61dafb', borderRadius: 6, data: (data.brands || []).map(x => x.value), borderWidth: 1 }]
+      datasets: [
+        { label: 'Sales', backgroundColor: 'rgba(97,218,251,.45)', borderColor: '#61dafb', borderRadius: 6, data: (data.brands || []).map(x => x.value), borderWidth: 1 },
+        { label: 'Gross profit (FIFO)', backgroundColor: 'rgba(74,222,128,.45)', borderColor: '#4ade80', borderRadius: 6, data: (data.brands || []).map(x => x.grossProfit), borderWidth: 1 }
+      ]
     },
-    options: chartOptions(false)
+    options: {
+      ...chartOptions(false),
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        ...chartOptions(false).plugins,
+        tooltip: {
+          ...chartOptions(false).plugins.tooltip,
+          callbacks: {
+            ...chartOptions(false).plugins.tooltip.callbacks,
+            afterBody: items => (data.brands || [])[items[0]?.dataIndex]?.isProfitEstimated ? 'Includes estimated historical prices/costs.' : ''
+          }
+        }
+      }
+    }
   });
 }
 
