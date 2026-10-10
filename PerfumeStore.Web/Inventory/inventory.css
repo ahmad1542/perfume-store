@@ -141,4 +141,15 @@
 .list-tools > a { white-space: nowrap; }
 .list-tools { flex-wrap: wrap; }
 .table-wrapper { overflow-x: auto; }
+.stock-cost-card { grid-column: 1 / -1; min-width: 0; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: rgba(255,255,255,.025); }
+.stock-cost-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 18px 20px 8px; }
+.stock-cost-header h3 { margin: 0; font-size: 1.05rem; color: #e8eefc; }
+.stock-cost-header span { color: #a7b5d0; font-size: .9rem; }
+.stock-cost-header strong { color: #79d6ad; margin-left: 8px; }
+.stock-cost-caption { color: #a7b5d0; padding: 0 20px 16px; margin: 0; font-size: .9rem; }
+.stock-cost-table { min-width: 510px; }
+.stock-cost-table th { text-align: left; }
+.stock-cost-table .stock-number { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stock-cost-table .stock-value { font-weight: 800; color: #79d6ad; }
+.stock-estimate { display: block; color: #f5d7ad; font-size: .8rem; margin-top: 4px; }
 @media (max-width: 700px) { .list-tools { width: 100%; } }

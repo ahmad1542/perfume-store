@@ -51,6 +51,7 @@ async function fillProductsToElement(selectEl) {
     const opt = document.createElement("option");
     opt.value = id;
     opt.textContent = name;
+    opt.dataset.unitCost = String(p.costPrice ?? p.CostPrice ?? '');
     selectEl.appendChild(opt);
   });
 }
@@ -134,6 +135,7 @@ async function initEdit() {
     const item = await apiGetJson(`${API}/${encodeURIComponent(id)}`);
     if ($('ProductID')) $('ProductID').value = item.productID ?? item.ProductID ?? item.productid ?? item.Productid ?? '';
     if ($('Quantity')) $('Quantity').value = item.Quantity ?? item.quantity ?? item.Quantity ?? '';
+    if ($('AddedUnitCost')) $('AddedUnitCost').value = existingInventoryUnitCost(item);
 
     setMsg('pageMsg', '');
   } catch (e) {

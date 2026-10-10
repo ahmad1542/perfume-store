@@ -18,14 +18,15 @@ async function loadView() {
     const batches = item.batches ?? item.Batches ?? [];
     if (batches.length) {
       const table = document.createElement('div');
-      table.className = 'table-wrapper table-card';
-      table.innerHTML = `<h3>Stock by purchase cost</h3><table class="inventory-table"><thead><tr><th>Source</th><th>Qty remaining</th><th>Unit cost</th><th>Stock value</th></tr></thead><tbody>${batches.map(b => {
+      table.className = 'stock-cost-card';
+      table.innerHTML = `<div class="stock-cost-header"><h3>Stock by purchase cost</h3><span>Total value <strong>₪${escapeHtml(Number(item.stockCost ?? item.StockCost ?? 0).toFixed(2))}</strong></span></div><p class="stock-cost-caption">Remaining stock grouped by the cost paid for each batch.</p><div class="table-wrapper"><table class="inventory-table stock-cost-table"><thead><tr><th>Source</th><th class="stock-number">Qty remaining</th><th class="stock-number">Unit cost</th><th class="stock-number">Stock value</th></tr></thead><tbody>${batches.map(b => {
         const qty = b.remainingQuantity ?? b.RemainingQuantity;
         const cost = b.unitCost ?? b.UnitCost;
         const estimated = b.isCostEstimated ?? b.IsCostEstimated;
         const source = b.purchaseInvoiceID ?? b.PurchaseInvoiceID;
-        return `<tr><td>${escapeHtml(source ? `Purchase #${source}` : (b.source ?? b.Source))}</td><td>${escapeHtml(qty)}</td><td>${escapeHtml(cost)}${estimated ? ' (estimated)' : ''}</td><td>${escapeHtml((qty * cost).toFixed(2))}</td></tr>`;
-      }).join('')}</tbody></table>`;
+        const label = source ? `<a class="inventory-link" href="../PurchaseInvoices/view.html?id=${encodeURIComponent(source)}">Purchase #${escapeHtml(source)}</a>` : escapeHtml(b.source ?? b.Source);
+        return `<tr><td>${label}${estimated ? '<span class="stock-estimate">Estimated cost</span>' : ''}</td><td class="stock-number">${escapeHtml(qty)}</td><td class="stock-number">₪${escapeHtml(Number(cost).toFixed(2))}</td><td class="stock-number stock-value">₪${escapeHtml((qty * cost).toFixed(2))}</td></tr>`;
+      }).join('')}</tbody></table></div>`;
       $('details').appendChild(table);
     }
     setMsg('pageMsg', '');

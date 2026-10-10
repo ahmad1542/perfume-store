@@ -46,7 +46,7 @@
           <div class="form-group">
             <label for="AddedUnitCost">Cost per added unit (₪)</label>
             <input id="AddedUnitCost" type="number" min="0" step="0.01" placeholder="Enter cost when adding stock" />
-            <p class="hint">Required when increasing stock. Applies only to the extra units.</p>
+            <p class="hint">Prefilled from the product default cost. Change it if needed; it applies only to added units.</p>
           </div>
           <div class="form-actions"
             style="margin-top:14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -63,7 +63,8 @@
   <script src="../assets/endpoints.js"></script>
   <script src="../assets/common.js"></script>
   <script src="common.js"></script>
-  <script src="create.js"></script>
+  <script src="unit-cost.js?v=20261010-stock"></script>
+  <script src="create.js?v=20261010-stock"></script>
   <script>document.getElementById('btnSave').addEventListener('click', createItem); if (typeof initPage === 'function') initPage();</script>
 </body>
 

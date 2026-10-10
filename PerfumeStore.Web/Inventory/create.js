@@ -27,7 +27,8 @@ async function createItem() {
 
 async function initPage() {
   try {
-    const el = $('ProductID'); if (el) await fillProductsToElement(el);
+    const el = $('ProductID');
+    if (el) { await fillProductsToElement(el); el.addEventListener('change', prefillProductUnitCost); }
   } catch (e) { console.error(e); }
 }
 
@@ -78,6 +79,7 @@ async function fillProductsToElement(selectEl) {
     const opt = document.createElement("option");
     opt.value = id;
     opt.textContent = name;
+    opt.dataset.unitCost = String(p.costPrice ?? p.CostPrice ?? '');
     selectEl.appendChild(opt);
   });
 }

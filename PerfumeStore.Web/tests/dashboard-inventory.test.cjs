@@ -19,5 +19,5 @@ test('inventory batch details use the inventory table styles and show batch cost
  const details={innerHTML:'',appendChild(node){this.table=node;}};
  const context=vm.createContext({getQueryParam:()=>1,setMsg(){},API:'/api/Inventory',apiGetJson:async()=>({quantity:4,batches:[{remainingQuantity:4,unitCost:750,purchaseInvoiceID:2}]}),escapeHtml:String,$:()=>details,document:{createElement:()=>({})},console});
  vm.runInContext(read('Inventory/view.js'),context);await context.loadView();
- assert.match(details.table.innerHTML,/class="inventory-table"/);assert.match(details.table.innerHTML,/3000.00/);assert.match(details.table.innerHTML,/Purchase #2/);
+ assert.match(details.table.innerHTML,/class="inventory-table stock-cost-table"/);assert.match(details.table.innerHTML,/₪3000.00/);assert.match(details.table.innerHTML,/Purchase #2/);
 });
