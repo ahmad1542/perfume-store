@@ -64,6 +64,9 @@ async function run() {
   assert.equal((await request(`/api/Products/${product}`)).body.costPrice, 750);
   await request(`/api/PurchaseInvoices/${receipt}`, 'PATCH', {
     ...invoiceBody, UnitCosts: { [product]: 800 }
+  }, 400);
+  await request(`/api/PurchaseInvoices/${receipt}`, 'PATCH', {
+    ...invoiceBody, AmountPaid: 1600, UnitCosts: { [product]: 800 }
   }, 204);
   saved = (await request(`/api/SalesInvoices/${sale}`)).body;
   assert.equal(saved.products[0].costTotal, 3800);
@@ -74,9 +77,12 @@ async function run() {
   assert.equal((await request(`/api/Inventory/${product}`)).body.quantity, 1);
   await request(`/api/SalesInvoices/${sale}`, 'PATCH', {
     ...saleBody, Products: { [product]: 6 }, UnitPrices: { [product]: 30 }
+  }, 400);
+  await request(`/api/SalesInvoices/${sale}`, 'PATCH', {
+    ...saleBody, AmountPaid: 180, Products: { [product]: 6 }, UnitPrices: { [product]: 30 }
   }, 204);
   await request(`/api/SalesInvoices/${sale}`, 'PATCH', {
-    ...saleBody, Products: { [product]: 6 }, UnitPrices: { [product]: 25 }
+    ...saleBody, AmountPaid: 150, Products: { [product]: 6 }, UnitPrices: { [product]: 25 }
   }, 204);
   saved = (await request(`/api/SalesInvoices/${sale}`)).body;
   assert.equal(saved.products[0].unitPrice, 25);
