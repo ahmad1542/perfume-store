@@ -55,6 +55,11 @@ async function fillMoneyAccounts(selectId) {
 }
 
 async function initPage() {
+  const dateInput = $('Date');
+  if (dateInput && !dateInput.value) {
+    const today = new Date();
+    dateInput.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  }
   try {
     await fillPeopleSelect('SupplierId', window.API_ENDPOINTS.suppliers);
     fillMoneyAccounts('MoneyAccountId');

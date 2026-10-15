@@ -113,6 +113,7 @@
 }
 
 select {
+  color-scheme: dark;
   background: linear-gradient(180deg, #141c2f, #0f1626);
   color: #e8eefc;
   border: 1px solid rgba(255, 255, 255, .12);
@@ -125,6 +126,12 @@ select {
 select:hover {
   background: linear-gradient(180deg, #18223a, #121b30);
 }
+
+#ExpenseTypeID option, #MoneyAccountID option {
+  background-color: #141c2f;
+  color: #e8eefc;
+}
+#ExpenseTypeID option:disabled, #MoneyAccountID option:disabled { color: #a7b5d0; }
 
 select:focus {
   border-color: rgba(97, 218, 251, .6);
