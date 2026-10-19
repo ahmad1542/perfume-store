@@ -52,6 +52,34 @@ from the oldest estimated receipts. These reconstructed costs remain marked as
 estimated; a correction that exceeds a reconciled historical receipt requires
 correcting the inventory count or related invoices first.
 
+## Cash and profit history
+
+Open **Cash History** or **Profit History** in the dashboard's Finance section.
+Choose a month and year (2021 onward); cash history also filters by account.
+
+- Cash history lists money received and paid, transfers, balance corrections,
+  opening/closing balances, and running balances. New cash changes are dated
+  when the account changes, using Jerusalem time. Source links open the record.
+- Profit history lists sale revenue, FIFO cost of goods sold, expenses, and
+  corrections. Corrections affect the original sale/expense month and show when
+  they were recorded. Receipt and payment vouchers appear with **zero profit
+  effect** so collecting an old debt does not count the sale twice.
+- New saved balance and profit changes append history entries. Saves performed
+  inside an existing invoice transaction share its commit/rollback. Related
+  saves within one API request are grouped together on the history page.
+- The first startup after migration reconstructs older history from the
+  currently saved records. It does **not** recover previous edits or exact
+  same-day ordering. A clearly marked opening reconciliation absorbs unknown
+  opening balances and untracked earlier adjustments; historical standalone
+  debts can only use their saved remaining amount. Historical running balances
+  are therefore reconstructions, not independently verified account statements.
+- Future account/history discrepancies display a warning; they are not repaired
+  automatically. Existing cash/profit rules and transaction boundaries remain
+  unchanged, including the separate receipt-save and cash-save steps.
+
+The migration adds history tables without rewriting existing financial records.
+The startup backfill is idempotent and preserves current balances and profit.
+
 ## Run with Docker
 
 Use Docker with its **Linux engine running**. SQL Server needs an x64 machine.

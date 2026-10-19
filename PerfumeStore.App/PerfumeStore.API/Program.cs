@@ -40,6 +40,7 @@ if (builder.Configuration.GetValue("Database:Initialize", false)) {
     await using var scope = app.Services.CreateAsyncScope();
     var database = scope.ServiceProvider.GetRequiredService<PerfumeStoreDbContext>();
     await database.Database.MigrateAsync();
+    await database.InitializeFinancialHistoryAsync();
 }
 app.UseExceptionHandler();
 
@@ -59,6 +60,17 @@ app.UseStaticFiles();
 app.UseCors(allowedOrigins);
 
 app.UseAuthorization();
+
+app.Use(async (context, next) => {
+    if (context.Request.Path.StartsWithSegments("/api") && context.Request.Method is "POST" or "PATCH" or "PUT" or "DELETE") {
+        var parts = context.Request.Path.Value!.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var database = context.RequestServices.GetRequiredService<PerfumeStoreDbContext>();
+        database.HistoryContext.Resource = parts.ElementAtOrDefault(1) ?? "";
+        database.HistoryContext.SourceId = parts.ElementAtOrDefault(2) ?? "";
+        database.HistoryContext.Action = context.Request.Method == "POST" ? "Created" : "Corrected";
+    }
+    await next();
+});
 
 app.MapControllers();
 app.MapGet("/", () => Results.Redirect("/Dashboard/index.html"));

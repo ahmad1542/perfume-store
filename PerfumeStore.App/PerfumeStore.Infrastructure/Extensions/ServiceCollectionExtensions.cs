@@ -30,6 +30,7 @@ namespace PerfumeStore.Infrastructure.Extensions {
             services.AddScoped<IExpensesRepository, ExpensesRepository>();
             services.AddScoped<IExpenseTypesRepository, ExpenseTypesRepository>();
             services.AddScoped<IDashboardService, DashboardRepository>();
+            services.AddScoped<PerfumeStore.Application.FinancialHistory.IFinancialHistoryService, FinancialHistoryRepository>();
         }
 
     }

@@ -58,6 +58,7 @@ async function initPage() {
   try {
     await fillDebtPartiesSelect("PersonId");
     await fillMoneyAccounts("moneyAccount");
+    selectSafeMoneyAccount($("moneyAccount"));
   } catch (e) {
     console.error(e);
   }

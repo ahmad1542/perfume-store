@@ -283,6 +283,10 @@ async function loadDashboard() {
     const month = document.getElementById('dashboardMonth')?.value;
     const year = document.getElementById('dashboardYear')?.value;
     const period = month && year ? '?year=' + encodeURIComponent(year) + '&month=' + encodeURIComponent(month) : '';
+    for (const kind of ['cash', 'profit']) {
+      const link = document.getElementById(kind + 'HistoryLink');
+      if (link) link.href = '../FinancialHistory/index.html?kind=' + kind + (period ? '&' + period.slice(1) : '');
+    }
     const url = window.APP_CONFIG.API_BASE_URL + '/Dashboard' + period;
     const data = await apiGetJson(url);
     if (request !== dashboardRequest) return;

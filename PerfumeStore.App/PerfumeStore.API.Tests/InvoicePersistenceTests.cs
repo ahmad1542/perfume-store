@@ -94,6 +94,7 @@ public sealed class InvoicePersistenceTests : IAsyncLifetime {
             new Dictionary<int, decimal> { [product.ID] = 800 });
         db.ChangeTracker.Clear();
         Assert.Equal(4600m, (await db.SalesInvoiceItems.SingleAsync()).CostTotal);
+        Assert.Equal(4600m, (await db.FinancialHistoryEntries.Where(x => x.Kind == "profit").ToListAsync()).Sum(x => x.CostChange));
         Assert.Equal(0, (await db.Inventory.SingleAsync()).Quantity);
         Assert.Equal(900m, (await db.SalesInvoiceItems.SingleAsync()).UnitPrice);
     }

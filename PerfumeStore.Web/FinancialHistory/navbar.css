@@ -1,0 +1,66 @@
+/* Match the established page navbar, including Bootstrap's base metrics,
+   without adding Bootstrap's global styles to the history content. */
+.navbar,
+.navbar * {
+  box-sizing: border-box;
+}
+
+.navbar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #0e1833, #0b1220);
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  font: 16px/24px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  line-height: 30px;
+  font-weight: 900;
+  color: #e8eefc;
+  letter-spacing: 0.2px;
+  padding: 5px 0;
+  margin-right: 16px;
+  white-space: nowrap;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.navbar-links a {
+  color: rgba(232, 238, 252, .70);
+  text-decoration: none;
+  font-weight: 700;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.navbar-links a:hover {
+  color: #ffffff;
+  text-decoration: none;
+  background: rgba(255, 255, 255, .06);
+  border-color: rgba(255, 255, 255, .10);
+}
+
+@media (max-width: 850px) {
+  .navbar-container { flex-wrap: wrap; }
+  .navbar-links { flex-wrap: wrap; }
+}

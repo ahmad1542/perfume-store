@@ -43,6 +43,7 @@ async function fillMoneyAccounts() {
     opt.textContent = name;
     el.appendChild(opt);
   });
+  selectSafeMoneyAccount(el);
 }
 
 async function loadOpenInvoices() {

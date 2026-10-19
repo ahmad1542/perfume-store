@@ -26,6 +26,7 @@ async function initPage() {
     if ($('Date') && !$('Date').value) $('Date').value = today;
 
     await fillMoneyAccounts('MoneyAccountID');
+    selectSafeMoneyAccount($('MoneyAccountID'));
     await fillExpenseTypes();
     wireExpenseTypeCreation();
   } catch (e) {

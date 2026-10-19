@@ -72,11 +72,11 @@ async function fillMoneyAccounts(selectId) {
       toggledElement.style.display = "none";
       const moneyAccountSelect = $(selectId);
       if (moneyAccountSelect) {
-        moneyAccountSelect.value = id;
+        selectSafeMoneyAccount(moneyAccountSelect);
       }
     }
   });
-
+  selectSafeMoneyAccount(el);
 }
 
 async function initPage() {
@@ -120,6 +120,7 @@ async function initPage() {
       if (amount > 0) {
         moneyAccountSelect.disabled = false;
         moneyAccountSelect.required = true;
+        selectSafeMoneyAccount(moneyAccountSelect);
       } else {
         moneyAccountSelect.disabled = true;
         moneyAccountSelect.required = false;

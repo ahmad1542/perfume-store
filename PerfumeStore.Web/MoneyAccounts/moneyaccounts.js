@@ -64,6 +64,7 @@ async function loadList(searchText = "") {
       ${cells.map(c => `<td>${c}</td>`).join("")}
       <td class="actions-cell">
         <a class="btn-edit" href="view.html?id=${encodeURIComponent(id)}">View</a>
+        <a class="btn-edit" href="../FinancialHistory/index.html?kind=cash&accountId=${encodeURIComponent(id)}">History</a>
         <a class="btn-edit" href="edit.html?id=${encodeURIComponent(id)}">Edit</a>
       </td>
     `;

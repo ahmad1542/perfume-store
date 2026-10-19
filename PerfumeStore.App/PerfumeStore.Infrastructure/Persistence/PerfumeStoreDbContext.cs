@@ -34,6 +34,19 @@ public partial class PerfumeStoreDbContext : DbContext {
     public virtual DbSet<Person> Persons { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<FinancialHistoryStart>().Property(x => x.ID).ValueGeneratedNever();
+        modelBuilder.Entity<FinancialHistoryEntry>(entity => {
+            entity.Property(x => x.Kind).HasMaxLength(10);
+            entity.Property(x => x.SourceType).HasMaxLength(50);
+            entity.Property(x => x.SourceId).HasMaxLength(50);
+            entity.Property(x => x.Description).HasMaxLength(250);
+            entity.Property(x => x.CashChange).HasPrecision(18, 2);
+            entity.Property(x => x.RevenueChange).HasPrecision(18, 2);
+            entity.Property(x => x.CostChange).HasPrecision(18, 2);
+            entity.Property(x => x.ExpenseChange).HasPrecision(18, 2);
+            entity.HasIndex(x => new { x.Kind, x.EffectiveDate });
+            entity.HasIndex(x => new { x.Kind, x.MoneyAccountId, x.RecordedAt });
+        });
         modelBuilder.Entity<InventoryBatch>(entity => {
             entity.Property(e => e.UnitCost).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Source).HasMaxLength(30);

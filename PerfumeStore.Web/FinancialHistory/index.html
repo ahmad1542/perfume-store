@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Financial History - Memento Perfume</title>
+  <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-dropdowns">
+  <link rel="stylesheet" href="history.css?v=20261019-navbar">
+  <link rel="stylesheet" href="navbar.css?v=20261019">
+</head>
+<body>
+  <header class="navbar">
+    <div class="navbar-container">
+      <div class="navbar-brand">Memento Perfume</div>
+      <nav class="navbar-links" aria-label="Main navigation">
+        <a href="../Dashboard/index.html">Dashboard</a>
+        <a href="../MoneyAccounts/index.html">Money Accounts</a>
+        <a href="../SalesInvoices/index.html">Sales Invoices</a>
+        <a href="../ReceiptVouchers/index.html">Receipt Vouchers</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="heading"><div><h1 id="title">Cash History</h1><p id="explanation"></p></div><button id="refresh" type="button">Refresh</button></div>
+    <div class="toolbar">
+      <div class="tabs" aria-label="History type"><a id="cashTab" href="?kind=cash">Cash history</a><a id="profitTab" href="?kind=profit">Profit history</a></div>
+      <div class="filters"><label>Month <select id="month"></select></label><label>Year <select id="year"></select></label><label id="accountFilter">Account <select id="account"><option value="">All accounts</option></select></label></div>
+    </div>
+    <p id="message" role="status" aria-live="polite"></p>
+    <div id="summary" class="summary"></div>
+    <p id="balanceNote" class="muted"></p>
+    <p id="reconciliationWarning" class="error" role="alert" hidden></p>
+    <details class="history-note"><summary>About older records and corrections</summary><p id="trackingNote"></p><p>Older records are reconstructed from their currently saved values. Their exact same-day order and earlier edits are unknown. The opening cash figure reconciles those records to the saved account balance and can include untracked earlier adjustments. It is not independently verified.</p><p>New cash entries show the day the balance changed (Jerusalem time). Profit entries stay in the sale or expense month; a later correction shows when it was recorded. Future edits add history entries rather than replacing earlier entries.</p></details>
+    <section class="table-card" aria-label="Transactions"><div class="table-scroll"><table><caption id="caption">Transactions for the selected month</caption><thead id="columns"></thead><tbody id="rows"></tbody></table></div></section>
+  </main>
+  <script src="../assets/api-config.js"></script><script src="../assets/common.js"></script><script src="history.js?v=20261019"></script>
+</body>
+</html>

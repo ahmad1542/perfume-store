@@ -52,6 +52,7 @@ async function fillMoneyAccounts(selectId) {
     opt.textContent = name;
     el.appendChild(opt);
   });
+  selectSafeMoneyAccount(el);
 }
 
 async function initPage() {
@@ -93,6 +94,7 @@ async function initPage() {
       if (amount > 0) {
         moneyAccountSelect.disabled = false;
         moneyAccountSelect.required = true;
+        selectSafeMoneyAccount(moneyAccountSelect);
       } else {
         moneyAccountSelect.disabled = true;
         moneyAccountSelect.required = false;

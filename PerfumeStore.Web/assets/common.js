@@ -3,6 +3,15 @@ function $(id) {
     return document.getElementById(id);
 }
 
+// Creation forms only: select the actual Safe account from the loaded options.
+// Keep explicit choices and zero-payment invoice account rules intact.
+function selectSafeMoneyAccount(select) {
+    if (!select || select.disabled || select.value) return;
+    const safe = Array.from(select.options).find(option =>
+        option.value && option.textContent.trim().toLowerCase() === 'safe');
+    if (safe) select.value = safe.value;
+}
+
 // Show a message in #pageMsg
 function setMsg(elementId, text, isError = false) {
     const msgEl = $(elementId);

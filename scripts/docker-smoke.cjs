@@ -90,6 +90,16 @@ async function run() {
   stock = (await request(`/api/Inventory/${product}`)).body;
   assert.equal(stock.quantity, 0);
   assert.equal(stock.stockCost, 0);
+  const period = `year=${today.slice(0, 4)}&month=${Number(today.slice(5, 7))}`;
+  const cashHistory = (await request(`/api/FinancialHistory/cash?${period}&accountId=${account}`)).body;
+  assert.equal(cashHistory.balanceDifference, 0);
+  assert.equal(cashHistory.closingBalance, 8550);
+  assert.ok(cashHistory.rows.some(row => row.sourceType === 'PurchaseInvoices' && row.cashChange === -40));
+  const profitHistory = (await request(`/api/FinancialHistory/profit?${period}`)).body;
+  assert.equal(profitHistory.revenue, 150);
+  assert.equal(profitHistory.cost, 4600);
+  assert.equal(profitHistory.netProfit, -4450);
+  assert.equal(profitHistory.netProfit, (await request(`/api/Dashboard?${period}`)).body.netProfit);
   const missing = await request('/api/Products/2147483647', 'GET', null, 404);
   assert.ok(missing.body.traceId);
   console.log(`Docker/SQL Server checks passed: migrations, hosted pages, FIFO, prices, corrections, rollback, errors. Product ${product}.`);
