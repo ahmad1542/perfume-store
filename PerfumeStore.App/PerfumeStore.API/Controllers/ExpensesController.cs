@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PerfumeStore.Application.Expenses.Commands.CreateExpense;
+using PerfumeStore.Application.Expenses.Commands.DeleteExpense;
 using PerfumeStore.Application.Expenses.Commands.UpdateExpense;
 using PerfumeStore.Application.Expenses.Dtos;
 using PerfumeStore.Application.Expenses.Queries.GetAllExpenses;
@@ -38,6 +39,12 @@ namespace PerfumeStore.API.Controllers {
         public async Task<IActionResult> UpdateExpense([FromRoute] long id, [FromBody] UpdateExpenseCommand command) {
             command.ID = id;
             await mediator.Send(command);
+            return NoContent();
+        }
+
+        [HttpDelete("{id:long}")]
+        public async Task<IActionResult> DeleteExpense(long id) {
+            await mediator.Send(new DeleteExpenseCommand(id));
             return NoContent();
         }
     }

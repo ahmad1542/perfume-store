@@ -67,7 +67,7 @@ app.Use(async (context, next) => {
         var database = context.RequestServices.GetRequiredService<PerfumeStoreDbContext>();
         database.HistoryContext.Resource = parts.ElementAtOrDefault(1) ?? "";
         database.HistoryContext.SourceId = parts.ElementAtOrDefault(2) ?? "";
-        database.HistoryContext.Action = context.Request.Method == "POST" ? "Created" : "Corrected";
+        database.HistoryContext.Action = context.Request.Method switch { "POST" => "Created", "DELETE" => "Deleted", _ => "Corrected" };
     }
     await next();
 });

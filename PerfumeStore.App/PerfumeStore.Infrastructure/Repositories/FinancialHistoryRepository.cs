@@ -9,6 +9,7 @@ public class FinancialHistoryRepository(PerfumeStoreDbContext db) : IFinancialHi
         var start = new DateTime(year, month, 1);
         var end = start.AddMonths(1);
         var accounts = await db.MoneyAccounts.AsNoTracking().ToListAsync(ct);
+        var expenseIds = (await db.Expenses.AsNoTracking().Select(x => x.ID).ToListAsync(ct)).Select(x => x.ToString()).ToHashSet();
         var query = db.FinancialHistoryEntries.AsNoTracking().Where(x => x.Kind == kind);
         if (kind == "cash" && accountId.HasValue) query = query.Where(x => x.MoneyAccountId == accountId);
         var before = kind == "cash" ? await query.Where(x => x.EffectiveDate < start).ToListAsync(ct) : [];
@@ -25,6 +26,7 @@ public class FinancialHistoryRepository(PerfumeStoreDbContext db) : IFinancialHi
                 Row = new FinancialHistoryRowDto {
                     Date = g.Key.EffectiveDate, RecordedAt = g.Max(x => x.RecordedAt),
                     SourceType = g.Key.SourceType, SourceId = g.Key.SourceId,
+                    IsSourceDeleted = g.Key.SourceType == "Expenses" && !expenseIds.Contains(g.Key.SourceId),
                     Description = g.Key.Kind == "cash" && kind == "profit" ? "Debt payment: cash changes; profit does not" : g.First().Description,
                     AccountName = accounts.FirstOrDefault(x => x.ID == g.Key.MoneyAccountId)?.AccountName,
                     CashChange = g.Sum(x => x.CashChange), RevenueChange = g.Sum(x => x.RevenueChange),

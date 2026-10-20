@@ -11,9 +11,9 @@ async function initEdit() {
 
   try {
     const item = await apiGetJson(`${API}/${encodeURIComponent(id)}`);
-    if ($('AccountName')) $('AccountName').value = item.AccountName ?? item.accountname ?? item.Accountname ?? '';
-    if ($('CurrentBalance')) $('CurrentBalance').value = item.CurrentBalance ?? item.currentbalance ?? item.Currentbalance ?? '';
-    if ($('Notes')) $('Notes').value = item.Notes ?? item.notes ?? item.Notes ?? '';
+    if ($('AccountName')) $('AccountName').value = item.accountName ?? item.AccountName ?? item.accountname ?? item.Accountname ?? '';
+    if ($('CurrentBalance')) $('CurrentBalance').value = item.currentBalance ?? item.CurrentBalance ?? item.currentbalance ?? item.Currentbalance ?? '';
+    if ($('Notes')) $('Notes').value = item.notes ?? item.Notes ?? '';
 
     setMsg('pageMsg', '');
   } catch (e) {

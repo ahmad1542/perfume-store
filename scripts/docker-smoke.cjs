@@ -100,6 +100,15 @@ async function run() {
   assert.equal(profitHistory.cost, 4600);
   assert.equal(profitHistory.netProfit, -4450);
   assert.equal(profitHistory.netProfit, (await request(`/api/Dashboard?${period}`)).body.netProfit);
+  const expenseType = Number(await create('ExpenseTypes', { Name: `Smoke expense ${suffix}` }));
+  const expense = await create('Expenses', { Date: today, Amount: 20, ExpenseTypeId: expenseType, MoneyAccountID: account });
+  assert.equal((await request(`/api/MoneyAccounts/${account}`)).body.currentBalance, 8530);
+  await request(`/api/Expenses/${expense}`, 'DELETE', null, 204);
+  await request(`/api/Expenses/${expense}`, 'DELETE', null, 404);
+  assert.equal((await request(`/api/MoneyAccounts/${account}`)).body.currentBalance, 8550);
+  const afterDeletion = (await request(`/api/FinancialHistory/profit?${period}`)).body;
+  assert.equal(afterDeletion.netProfit, -4450);
+  assert.ok(afterDeletion.rows.some(row => row.sourceType === 'Expenses' && row.sourceId === expense && row.isSourceDeleted && row.expenseChange === -20));
   const missing = await request('/api/Products/2147483647', 'GET', null, 404);
   assert.ok(missing.body.traceId);
   console.log(`Docker/SQL Server checks passed: migrations, hosted pages, FIFO, prices, corrections, rollback, errors. Product ${product}.`);

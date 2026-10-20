@@ -85,8 +85,27 @@ async function loadList(searchText = "") {
       <td class="actions-cell">
         <a class="btn-edit" href="view.html?id=${encodeURIComponent(id)}">View</a>
         <a class="btn-edit" href="edit.html?id=${encodeURIComponent(id)}">Edit</a>
+        <button type="button" class="btn-edit btn-delete">Delete</button>
       </td>
     `;
+    const deleteButton = tr.querySelector('.btn-delete');
+    deleteButton.addEventListener('click', () => deleteExpense(id, amount, moneyAccount, deleteButton));
     tbody.appendChild(tr);
   });
+}
+
+async function deleteExpense(id, amount, account, button) {
+  if (button.disabled) return;
+  const money = '₪' + Number(amount).toFixed(2);
+  if (!window.confirm(`Delete expense #${id} for ${money}?\n\nThis will restore ${money} to ${account} and remove the expense from its original month's profit calculation. The reversal will remain in history.`)) return;
+  button.disabled = true;
+  setMsg('pageMsg', 'Deleting expense...');
+  try {
+    await apiSendJson(`${API}/${encodeURIComponent(id)}`, 'DELETE');
+    await loadList($('searchInput')?.value || '');
+    setMsg('pageMsg', `Expense #${id} deleted. ${money} restored to ${account}.`);
+  } catch (error) {
+    setMsg('pageMsg', getFriendlyMessage(error), true);
+    button.disabled = false;
+  }
 }

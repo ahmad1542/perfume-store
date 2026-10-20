@@ -22,6 +22,7 @@ public class FinancialHistoryDto {
 }
 
 public class FinancialHistoryRowDto {
+    public bool IsSourceDeleted { get; set; }
     public DateTime Date { get; set; }
     public DateTime RecordedAt { get; set; }
     public string SourceType { get; set; } = "";

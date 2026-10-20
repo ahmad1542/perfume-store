@@ -8,6 +8,7 @@ const historySourceNames = { SalesInvoices: 'Sale invoice', PurchaseInvoices: 'P
 
 function historySourceLink(row) {
   const label = `${historySourceNames[row.sourceType] || 'Transaction'}${row.sourceId ? ' #' + row.sourceId : ''}`;
+  if (row.isSourceDeleted) return escapeHtml(label + ' (deleted)');
   if (!historySourceNames[row.sourceType] || !row.sourceId) return escapeHtml(label);
   return `<a href="../${row.sourceType}/view.html?id=${encodeURIComponent(row.sourceId)}">${escapeHtml(label)}</a>`;
 }

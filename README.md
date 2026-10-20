@@ -77,6 +77,13 @@ Choose a month and year (2021 onward); cash history also filters by account.
   automatically. Existing cash/profit rules and transaction boundaries remain
   unchanged, including the separate receipt-save and cash-save steps.
 
+Expenses can be deleted from the expense list after confirmation. This corrects
+the record: its saved amount is restored to its saved money account and its
+expense is reversed in the original month. The deletion, cash reversal, and
+profit reversal share one save transaction. Earlier history remains visible,
+with deleted expense references marked as deleted. Repeating a deletion returns
+not found and never credits the account twice.
+
 The migration adds history tables without rewriting existing financial records.
 The startup backfill is idempotent and preserves current balances and profit.
 

@@ -66,5 +66,10 @@ namespace PerfumeStore.Infrastructure.Repositories {
         }
 
         public async Task SaveChangesAsync() => await dbContext.SaveChangesAsync();
+
+        public async Task DeleteAsync(Expense expense) {
+            dbContext.Expenses.Remove(expense);
+            await dbContext.SaveChangesAsync();
+        }
     }
 }

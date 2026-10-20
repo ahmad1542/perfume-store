@@ -458,3 +458,14 @@ select:focus {
   word-break: break-word;
   color: rgba(232,238,252,.85);
 }
+
+.btn-delete {
+  color: #ff9baf;
+  border: 1px solid rgba(255, 155, 175, .3);
+  background: rgba(255, 155, 175, .08);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-delete:hover { color: #ffd5de; background: rgba(255, 155, 175, .16); }
+.btn-delete:disabled { opacity: .5; cursor: wait; }

@@ -161,6 +161,57 @@ public sealed class FinancialHistoryTests : IAsyncLifetime {
     }
 
     [Fact]
+    public async Task DeletingExpenseRestoresCashAndReversesOriginalMonthProfitOnlyOnce() {
+        await db.InitializeFinancialHistoryAsync();
+        var previousMonth = new DateTime(Today.Year, Today.Month, 1).AddMonths(-1);
+        var account = new MoneyAccount { AccountName = "Safe", CurrentBalance = 500 };
+        db.Add(account); await db.SaveChangesAsync();
+        var expense = new Expense { Date = previousMonth, Amount = 20, MoneyAccount = account,
+            ExpenseType = new ExpenseType { Name = "Personal" } };
+        db.HistoryContext = new FinancialHistoryContext { Resource = "Expenses", Action = "Created" };
+        db.Add(expense); account.CurrentBalance -= expense.Amount; await db.SaveChangesAsync();
+        Assert.Equal(-20, (await Report("profit", previousMonth)).NetProfit);
+        db.HistoryContext = new FinancialHistoryContext { Resource = "Expenses", SourceId = expense.ID.ToString(), Action = "Deleted" };
+        var handler = new PerfumeStore.Application.Expenses.Commands.DeleteExpense.DeleteExpenseCommandHandler(
+            new ExpensesRepository(db), new MoneyAccountsRepository(db));
+        var command = new PerfumeStore.Application.Expenses.Commands.DeleteExpense.DeleteExpenseCommand(expense.ID);
+        await handler.Handle(command, CancellationToken.None);
+        Assert.Empty(await db.Expenses.ToListAsync());
+        Assert.Equal(500, account.CurrentBalance);
+        var cash = await Report("cash", Today);
+        Assert.Equal(0, cash.BalanceDifference);
+        Assert.Contains(cash.Rows, x => x.SourceType == "Expenses" && x.CashChange == 20 && x.Description.Contains("Deleted"));
+        var profit = await Report("profit", previousMonth);
+        Assert.Equal(0, profit.NetProfit);
+        Assert.Equal(2, profit.Rows.Count);
+        Assert.All(profit.Rows, x => Assert.True(x.IsSourceDeleted));
+        Assert.Contains(profit.Rows, x => x.ExpenseChange == -20 && x.ProfitChange == 20);
+        Assert.Equal(0, (await Report("profit", Today)).NetProfit);
+        await Assert.ThrowsAsync<PerfumeStore.Domain.Exceptions.NotFoundException>(() => handler.Handle(command, CancellationToken.None));
+        Assert.Equal(500, account.CurrentBalance);
+    }
+
+    [Fact]
+    public async Task DeletingEditedExpenseRestoresItsCurrentAmountToItsCurrentAccount() {
+        await db.InitializeFinancialHistoryAsync();
+        var safe = new MoneyAccount { AccountName = "Safe", CurrentBalance = 500 };
+        var bank = new MoneyAccount { AccountName = "Bank", CurrentBalance = 100 };
+        db.AddRange(safe, bank); await db.SaveChangesAsync();
+        var expense = new Expense { Date = Today, Amount = 20, MoneyAccount = safe,
+            ExpenseType = new ExpenseType { Name = "Personal" } };
+        db.Add(expense); safe.CurrentBalance -= 20; await db.SaveChangesAsync();
+        safe.CurrentBalance += 20; bank.CurrentBalance -= 35;
+        expense.MoneyAccount = bank; expense.Amount = 35; await db.SaveChangesAsync();
+        await new PerfumeStore.Application.Expenses.Commands.DeleteExpense.DeleteExpenseCommandHandler(
+            new ExpensesRepository(db), new MoneyAccountsRepository(db)).Handle(
+                new PerfumeStore.Application.Expenses.Commands.DeleteExpense.DeleteExpenseCommand(expense.ID), CancellationToken.None);
+        Assert.Equal(500, safe.CurrentBalance);
+        Assert.Equal(100, bank.CurrentBalance);
+        Assert.Equal(0, (await Report("profit", Today)).NetProfit);
+        Assert.Equal(0, (await Report("cash", Today)).BalanceDifference);
+    }
+
+    [Fact]
     public async Task UntrackedBalanceChangesAreReportedAsDifferencesNotSilentlyRepaired() {
         await db.InitializeFinancialHistoryAsync();
         var account = new MoneyAccount { AccountName = "Safe", CurrentBalance = 500 };
