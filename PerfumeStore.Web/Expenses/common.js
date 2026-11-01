@@ -4,8 +4,6 @@ const MONEY_ACCOUNTS_API = window.API_ENDPOINTS.moneyAccounts;
 
 document.addEventListener("DOMContentLoaded", async () => {
   const searchBox = $("searchInput");
-  const fromDateInput = $("fromDateInput");
-  const toDateInput = $("toDateInput");
 
   let timer = null;
 
@@ -19,8 +17,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   if (searchBox) searchBox.addEventListener("input", triggerLoad);
-  if (fromDateInput) fromDateInput.addEventListener("change", triggerLoad);
-  if (toDateInput) toDateInput.addEventListener("change", triggerLoad);
 
   initExpenseTypeDropdown();
   await loadExpenseTypeFilters();
@@ -234,6 +230,7 @@ async function loadExpenseTypeFilters() {
 
   if (types.length === 0) {
     updateExpenseTypeDropdownText();
+    if (typeof loadList === 'function') loadList($('searchInput')?.value || '');
     return;
   }
 

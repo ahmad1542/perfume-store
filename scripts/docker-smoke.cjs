@@ -109,6 +109,11 @@ async function run() {
   const afterDeletion = (await request(`/api/FinancialHistory/profit?${period}`)).body;
   assert.equal(afterDeletion.netProfit, -4450);
   assert.ok(afterDeletion.rows.some(row => row.sourceType === 'Expenses' && row.sourceId === expense && row.isSourceDeleted && row.expenseChange === -20));
+  for (const resource of ['Expenses', 'SalesInvoices', 'PurchaseInvoices', 'Debts', 'PaymentVouchers', 'ReceiptVouchers', 'MoneyTransactions']) {
+    assert.deepEqual((await request(`/api/${resource}?fromDate=2099-01-01&toDate=2099-01-01`)).body, [], `${resource} must filter in SQL`);
+  }
+  assert.equal((await request(`/api/SalesInvoices?fromDate=${today}&toDate=${today}`)).body[0].invoiceTotal, 150);
+  assert.equal((await request(`/api/PurchaseInvoices?fromDate=${today}&toDate=${today}`)).body[0].invoiceTotal, 1600);
   const missing = await request('/api/Products/2147483647', 'GET', null, 404);
   assert.ok(missing.body.traceId);
   console.log(`Docker/SQL Server checks passed: migrations, hosted pages, FIFO, prices, corrections, rollback, errors. Product ${product}.`);

@@ -5,6 +5,11 @@ function setTableHeader() {
 }
 
 async function loadList(searchText = '') {
+  if (typeof RecordFilters !== 'undefined') {
+    try { await RecordFilters.ready; RecordFilters.restoreLegacy(); }
+    catch (error) { setMsg('pageMsg', error.message, true); return; }
+    searchText = $('searchInput')?.value ?? searchText;
+  }
   setTableHeader();
 
   const tbody = $('rows');
@@ -13,17 +18,20 @@ async function loadList(searchText = '') {
   const countChip = $('countChip');
 
   if (!tbody) return;
+  const listRequest = TransactionList.begin();
+  if (listRequest === null) return;
   setMsg('pageMsg', 'Loading...', false);
 
-  const url = searchText && searchText.trim().length > 0
-    ? `${API}?search=${encodeURIComponent(searchText.trim())}`
-    : API;
+  const url = TransactionList.url(API, searchText);
 
   let list = [];
   try {
     list = await apiGetJson(url);
     list = Array.isArray(list) ? list : [];
+    if (!TransactionList.current(listRequest)) return;
+    TransactionList.render('PaymentVouchers', list);
   } catch (e) {
+    if (!TransactionList.current(listRequest)) return;
     setMsg('pageMsg', 'Failed to load payment vouchers.', true);
     tbody.innerHTML = '';
     if (countChip) countChip.textContent = '0';

@@ -5,7 +5,7 @@ using PerfumeStore.Infrastructure.Persistence;
 
 namespace PerfumeStore.Infrastructure.Repositories {
     public class DashboardRepository(PerfumeStoreDbContext dbContext) : IDashboardService {
-        public async Task<DashboardDto> GetAsync(int? year = null, int? month = null) {
+        public async Task<DashboardDto> GetAsync(int? year = null, int? month = null, int brandLimit = 5) {
             var now = DateTime.Now;
             var monthStart = new DateTime(year ?? now.Year, month ?? now.Month, 1);
             var nextMonthStart = monthStart.AddMonths(1);
@@ -160,7 +160,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
                     IsProfitEstimated = g.Any(x => x.IsPriceEstimated || x.IsCostEstimated || x.UnitPrice == null || x.CostTotal == null)
                 })
                 .OrderByDescending(x => x.Value)
-                .Take(5)
+                .Take(brandLimit == 0 ? int.MaxValue : brandLimit)
                 .ToList();
 
             var expenseBreakdown = expenses

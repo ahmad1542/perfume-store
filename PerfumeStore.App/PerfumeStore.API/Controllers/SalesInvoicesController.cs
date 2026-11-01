@@ -1,4 +1,5 @@
-﻿using MediatR;
+using PerfumeStore.Domain.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PerfumeStore.Application.SalesInvoices.Commands.CreateSalesInvoice;
 using PerfumeStore.Application.SalesInvoices.Commands.UpdateSalesInvoice;
@@ -19,11 +20,11 @@ namespace PerfumeStore.API.Controllers {
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SalesInvoiceDto>>> GetAll(
+        public async Task<ActionResult<IEnumerable<SalesInvoiceDto>>> GetAll([FromQuery] RecordFilters filters,
             [FromQuery] string? search,
             [FromQuery] DateTime? fromDate,
             [FromQuery] DateTime? toDate) {
-            var salesInvoices = await mediator.Send(new GetAllSalesinvoicesQuery {
+            var salesInvoices = await mediator.Send(new GetAllSalesinvoicesQuery { Filters = filters,
                 Search = search,
                 FromDate = fromDate,
                 ToDate = toDate

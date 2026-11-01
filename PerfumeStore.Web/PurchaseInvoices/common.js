@@ -2,8 +2,6 @@ const API = window.API_ENDPOINTS.purchaseInvoices;
 
 document.addEventListener("DOMContentLoaded", () => {
   const searchBox = $("searchInput");
-  const fromDateInput = $("fromDateInput");
-  const toDateInput = $("toDateInput");
 
   let timer = null;
 
@@ -20,11 +18,5 @@ document.addEventListener("DOMContentLoaded", () => {
     searchBox.addEventListener("input", triggerLoad);
   }
 
-  if (fromDateInput) {
-    fromDateInput.addEventListener("change", triggerLoad);
-  }
 
-  if (toDateInput) {
-    toDateInput.addEventListener("change", triggerLoad);
-  }
 });

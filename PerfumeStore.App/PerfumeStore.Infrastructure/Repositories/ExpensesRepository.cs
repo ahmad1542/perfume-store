@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PerfumeStore.Domain.Entities;
 using PerfumeStore.Domain.Repositories;
 using PerfumeStore.Infrastructure.Persistence;
@@ -12,7 +12,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
             return expense.ID;
         }
 
-        public async Task<IEnumerable<Expense>> GetAllAsync(string? search = null, DateTime? fromDate = null, DateTime? toDate = null, IEnumerable<long>? expenseTypeIds = null) {
+        public async Task<IEnumerable<Expense>> GetAllAsync(string? search = null, DateTime? fromDate = null, DateTime? toDate = null, IEnumerable<long>? expenseTypeIds = null, RecordFilters? filters = null) {
             IQueryable<Expense> query = dbContext.Expenses
                 .AsNoTracking()
                 .Include(e => e.ExpenseType)
@@ -55,7 +55,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
             }
 
             query = query.OrderByDescending(x => x.Date).ThenByDescending(x => x.ID);
-            return await query.ToListAsync();
+            return await query.Filter(filters).ToListAsync();
         }
 
         public async Task<Expense?> GetByIdAsync(long id) {

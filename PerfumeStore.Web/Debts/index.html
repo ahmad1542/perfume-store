@@ -11,6 +11,8 @@
 
   <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-dropdowns" />
   <link rel="stylesheet" href="debts.css" />
+  <link rel="stylesheet" href="../assets/transaction-lists.css?v=20261031">
+  <link rel="stylesheet" href="../assets/record-filters.css?v=20261101">
 </head>
 
 <body>
@@ -40,22 +42,25 @@
         </div>
 
         <div class="list-tools">
-          <div class="form-group">
-            <label class="chk">
-              <input type="checkbox" id="ShowSettled" />
-              <span class="chk-box" aria-hidden="true"></span>
-              <span class="chk-text">Show Settled Debts</span>
-            </label>
-          </div>
+
           <input id="searchInput" class="search-input" type="text" placeholder="Search..." />
           <a href="create.html" class="btn-primary" style="width: 150px;">+ New Debt</a>
         </div>
       </div>
 
+      <div id="advancedFilters" class="record-filters" aria-label="Record filters"></div>
+      <div class="list-period" aria-label="Date filters">
+        <label>From <input id="fromDateInput" class="search-input" type="date"></label>
+        <label>To <input id="toDateInput" class="search-input" type="date"></label>
+        <button id="currentMonthButton" class="btn-light" type="button">This month</button>
+        <button id="allDatesButton" class="btn-light" type="button">All dates</button>
+        <p class="list-period-note">Current month by default. Change the dates to load another period. Debt dates are used; choose All dates to see older unpaid debts.</p>
+      </div>
+
       <div id="emptyState" class="empty-state">
         <div class="empty-icon">📄</div>
-        <h2>No debts yet</h2>
-        <p>Start by creating your first record.</p>
+        <h2>No records match your filters</h2>
+        <p>Try another date range, search, or filter.</p>
         <a href="create.html" class="btn-primary">Create</a>
       </div>
 
@@ -67,14 +72,17 @@
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <section id="listTotals" class="list-totals" aria-live="polite" hidden></section>
     </div>
   </main>
 
   <script src="../assets/api-config.js"></script>
   <script src="../assets/endpoints.js"></script>
   <script src="../assets/common.js"></script>
-  <script src="common.js"></script>
-  <script src="debts.js"></script>
+  <script src="../assets/record-filters.js?v=20261101"></script>
+  <script src="../assets/transaction-lists.js?v=20261101-filters"></script>
+  <script src="common.js?v=20261031-lists"></script>
+  <script src="debts.js?v=20261101-filters"></script>
   <script>loadList();</script>
 </body>
 

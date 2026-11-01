@@ -212,6 +212,29 @@ public sealed class FinancialHistoryTests : IAsyncLifetime {
     }
 
     [Fact]
+    public async Task HistoryFiltersKeepFullBalancesAndProfitWhileSummingOnlyMatchingRows() {
+        await db.InitializeFinancialHistoryAsync();
+        var (account,sale,item,customer)=await SeedSale(Today);
+        db.HistoryContext=new FinancialHistoryContext { Resource="Expenses",Action="Created" };
+        db.Add(new Expense { Date=Today,Amount=20,MoneyAccount=account,ExpenseType=new ExpenseType { Name="Shop" } });
+        account.CurrentBalance-=20;await db.SaveChangesAsync();
+        db.HistoryContext=new FinancialHistoryContext { Resource="ReceiptVouchers",Action="Created" };
+        db.Add(new ReceiptVoucher { Date=Today,Amount=20,MoneyAccount=account,Customer=customer });account.CurrentBalance+=20;await db.SaveChangesAsync();
+        var repository=new FinancialHistoryRepository(db);
+        var cash=await repository.GetAsync("cash",Today.Year,Today.Month,account.ID,filters:new() { SourceType="ReceiptVouchers" });
+        Assert.Single(cash.Rows);Assert.Equal(20,cash.MatchingMoneyIn);Assert.Equal(500,cash.ClosingBalance);
+        Assert.Equal(500,cash.Rows[0].RunningBalance);Assert.Equal(0,cash.BalanceDifference);
+        var profit=await repository.GetAsync("profit",Today.Year,Today.Month,null,filters:new() { SourceType="Expenses" });
+        Assert.Single(profit.Rows);Assert.Equal(-20,profit.MatchingProfit);Assert.Equal(30,profit.NetProfit);
+        Assert.Equal(3,profit.FullRowCount);
+        db.HistoryContext=new FinancialHistoryContext { Resource="SalesInvoices",SourceId=sale.ID.ToString(),Action="Corrected" };
+        item.UnitPrice=80;await db.SaveChangesAsync();
+        var corrections=await repository.GetAsync("profit",Today.Year,Today.Month,null,filters:new() { CorrectionsOnly=true });
+        Assert.Single(corrections.Rows);Assert.True(corrections.Rows[0].IsCorrection);
+        Assert.Equal(5,corrections.MatchingProfit);Assert.Equal(35,corrections.NetProfit);Assert.Equal(35,corrections.Rows[0].RunningBalance);
+    }
+
+    [Fact]
     public async Task UntrackedBalanceChangesAreReportedAsDifferencesNotSilentlyRepaired() {
         await db.InitializeFinancialHistoryAsync();
         var account = new MoneyAccount { AccountName = "Safe", CurrentBalance = 500 };

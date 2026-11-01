@@ -226,6 +226,9 @@ function renderCharts(data) {
     options: chartOptions(true)
   });
 
+  const horizontalBrands = (document.getElementById('brandLimit')?.value || '5') !== '5';
+  const frame = document.getElementById('brandChartFrame');
+  if (frame) frame.style.height = horizontalBrands ? Math.max(270, (data.brands || []).length * 65) + 'px' : '';
   brandChart = new Chart(brandCtx, {
     type: 'bar',
     data: {
@@ -237,13 +240,26 @@ function renderCharts(data) {
     },
     options: {
       ...chartOptions(false),
-      interaction: { mode: 'index', intersect: false },
+      indexAxis: horizontalBrands ? 'y' : 'x',
+      scales: horizontalBrands ? {
+        x: chartOptions(false).scales.y,
+        y: { ...chartOptions(false).scales.x, ticks: {
+          color: '#c4cfe4', autoSkip: false,
+          callback: function(value) {
+            const name = this.getLabelForValue(value);
+            const limit = brandCtx.clientWidth && brandCtx.clientWidth < 500 ? 18 : 28;
+            return name.length > limit ? name.slice(0, limit - 1) + '…' : name;
+          }
+        } }
+      } : chartOptions(false).scales,
+      interaction: { mode: 'index', intersect: false, axis: horizontalBrands ? 'y' : 'x' },
       plugins: {
         ...chartOptions(false).plugins,
         tooltip: {
           ...chartOptions(false).plugins.tooltip,
           callbacks: {
             ...chartOptions(false).plugins.tooltip.callbacks,
+            label: item => item.dataset.label + ': ' + fmtMoney(horizontalBrands ? item.parsed.x : item.parsed.y),
             afterBody: items => (data.brands || [])[items[0]?.dataIndex]?.isProfitEstimated ? 'Includes estimated historical prices/costs.' : ''
           }
         }
@@ -287,7 +303,8 @@ async function loadDashboard() {
       const link = document.getElementById(kind + 'HistoryLink');
       if (link) link.href = '../FinancialHistory/index.html?kind=' + kind + (period ? '&' + period.slice(1) : '');
     }
-    const url = window.APP_CONFIG.API_BASE_URL + '/Dashboard' + period;
+    const limit = document.getElementById('brandLimit')?.value;
+    const url = window.APP_CONFIG.API_BASE_URL + '/Dashboard' + period + (limit != null ? (period ? '&' : '?') + 'brandLimit=' + encodeURIComponent(limit) : '');
     const data = await apiGetJson(url);
     if (request !== dashboardRequest) return;
     bindDashboard(data);
@@ -302,6 +319,7 @@ async function loadDashboard() {
   }
 }
 
+document.getElementById('brandLimit')?.addEventListener('change', loadDashboard);
 toggleBtn?.addEventListener('click', () => {
   sidebar.classList.toggle('open');
   sidebarBackdrop.style.display = sidebar.classList.contains('open') ? 'block' : 'none';

@@ -25,3 +25,10 @@ test('brand chart compares sales and FIFO profit without stacking and preserves 
  assert.equal(brand.options.interaction.intersect,false);
  assert.match(brand.options.plugins.tooltip.callbacks.afterBody([{dataIndex:0}]),/estimated/);
 });
+
+test('all-brand view uses readable horizontal rows and money tooltips on the value axis',()=>{
+ const charts=[],frame={style:{}};const c=vm.createContext({document:{getElementById:id=>id==='brandLimit'?{value:'0',addEventListener(){}}:id==='brandChartFrame'?frame:id.endsWith('Chart')?{id}:null},Chart:function(_,config){charts.push(config)},console});
+ vm.runInContext(source,c);c.renderCharts({brands:Array.from({length:12},(_,i)=>({name:'Brand '+i,value:75,grossProfit:20}))});
+ const chart=charts.at(-1);assert.equal(chart.options.indexAxis,'y');assert.equal(frame.style.height,'780px');
+ assert.equal(chart.options.plugins.tooltip.callbacks.label({dataset:{label:'Sales'},parsed:{x:75,y:0}}),'Sales: ₪75');
+});

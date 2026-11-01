@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-dropdowns">
   <link rel="stylesheet" href="history.css?v=20261019-navbar">
   <link rel="stylesheet" href="navbar.css?v=20261019">
+  <link rel="stylesheet" href="../assets/record-filters.css?v=20261101">
 </head>
 <body>
   <header class="navbar">
@@ -25,13 +26,16 @@
       <div class="tabs" aria-label="History type"><a id="cashTab" href="?kind=cash">Cash history</a><a id="profitTab" href="?kind=profit">Profit history</a></div>
       <div class="filters"><label>Month <select id="month"></select></label><label>Year <select id="year"></select></label><label id="accountFilter">Account <select id="account"><option value="">All accounts</option></select></label></div>
     </div>
+      <div id="advancedFilters" class="record-filters" aria-label="Record filters"></div>
     <p id="message" role="status" aria-live="polite"></p>
     <div id="summary" class="summary"></div>
+    <section id="matchingSummary" class="matching-summary" hidden aria-live="polite"></section>
     <p id="balanceNote" class="muted"></p>
     <p id="reconciliationWarning" class="error" role="alert" hidden></p>
     <details class="history-note"><summary>About older records and corrections</summary><p id="trackingNote"></p><p>Older records are reconstructed from their currently saved values. Their exact same-day order and earlier edits are unknown. The opening cash figure reconciles those records to the saved account balance and can include untracked earlier adjustments. It is not independently verified.</p><p>New cash entries show the day the balance changed (Jerusalem time). Profit entries stay in the sale or expense month; a later correction shows when it was recorded. Future edits add history entries rather than replacing earlier entries.</p></details>
     <section class="table-card" aria-label="Transactions"><div class="table-scroll"><table><caption id="caption">Transactions for the selected month</caption><thead id="columns"></thead><tbody id="rows"></tbody></table></div></section>
   </main>
-  <script src="../assets/api-config.js"></script><script src="../assets/common.js"></script><script src="history.js?v=20261020-delete"></script>
+  <script src="../assets/api-config.js"></script><script src="../assets/record-filters.js?v=20261101"></script>
+  <script src="../assets/common.js"></script><script src="history.js?v=20261101-filters"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+using PerfumeStore.Domain.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PerfumeStore.Application.ReceiptVouchers.Commands.CreateReceiptVoucher;
@@ -13,8 +14,8 @@ namespace PerfumeStore.API.Controllers;
 [ApiController]
 public class ReceiptVouchersController(IMediator mediator) : ControllerBase {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ReceiptVoucherDto>>> GetAll([FromQuery] string? search) {
-        var items = await mediator.Send(new GetAllReceiptVouchersQuery { Search = search });
+    public async Task<ActionResult<IEnumerable<ReceiptVoucherDto>>> GetAll([FromQuery] RecordFilters filters, [FromQuery] string? search, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate) {
+        var items = await mediator.Send(new GetAllReceiptVouchersQuery { Filters = filters, Search = search, FromDate = fromDate, ToDate = toDate });
         return Ok(items);
     }
 

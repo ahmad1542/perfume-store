@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using MediatR;
 using PerfumeStore.Application.SalesInvoices.Dtos;
 using PerfumeStore.Domain.Repositories;
@@ -10,10 +10,16 @@ namespace PerfumeStore.Application.SalesInvoices.Queries.GetAllSalesinvoices {
             var salesInvoices = await salesInvoicesRepository.GetAllAsync(
                 request.Search,
                 request.FromDate,
-                request.ToDate
-            );
+                request.ToDate, request.Filters);
 
-            return mapper.Map<IEnumerable<SalesInvoiceDto>>(salesInvoices);
+            var invoices = salesInvoices.ToList();
+            var result = mapper.Map<List<SalesInvoiceDto>>(invoices);
+            if (request.Filters.HasLineFilters) {
+                for (var index = 0; index < invoices.Count; index++)
+                    result[index].MatchingProductsTotal = invoices[index].SalesInvoiceItems
+                        .Where(i => request.Filters.Matches(i.Product)).Sum(i => i.Quantity * (i.UnitPrice ?? i.Product.SalePrice));
+            }
+            return result;
         }
     }
 }

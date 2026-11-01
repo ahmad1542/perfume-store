@@ -11,6 +11,7 @@
 
   <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-dropdowns" />
   <link rel="stylesheet" href="inventory.css?v=20261009-low-stock-2" />
+  <link rel="stylesheet" href="../assets/record-filters.css?v=20261101">
 </head>
 
 <body>
@@ -43,6 +44,7 @@
         </div>
       </div>
 
+      <div id="advancedFilters" class="record-filters" aria-label="Record filters"></div>
       <div id="lowStockSummary" class="stock-summary" role="status" hidden></div>
 
       <div id="emptyState" class="empty-state">
@@ -66,8 +68,10 @@
   <script src="../assets/api-config.js"></script>
   <script src="../assets/endpoints.js"></script>
   <script src="../assets/common.js"></script>
+  <script src="../assets/record-filters.js?v=20261101"></script>
+  <script src="../assets/transaction-lists.js?v=20261101-filters"></script>
   <script src="common.js"></script>
-  <script src="inventory.js?v=20261009-low-stock"></script>
+  <script src="inventory.js?v=20261101-filters"></script>
   <script>loadList();</script>
 </body>
 

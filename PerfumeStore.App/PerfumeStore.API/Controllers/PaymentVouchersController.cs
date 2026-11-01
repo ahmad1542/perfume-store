@@ -1,4 +1,5 @@
-﻿using MediatR;
+using PerfumeStore.Domain.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PerfumeStore.Application.PaymentVouchers.Commands.CreatePaymentVoucher;
 using PerfumeStore.Application.PaymentVouchers.Dtos;
@@ -12,8 +13,8 @@ namespace PerfumeStore.API.Controllers;
 [ApiController]
 public class PaymentVouchersController(IMediator mediator) : ControllerBase {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PaymentVoucherDto>>> GetAll([FromQuery] string? search) {
-        var items = await mediator.Send(new GetAllPaymentVouchersQuery { Search = search });
+    public async Task<ActionResult<IEnumerable<PaymentVoucherDto>>> GetAll([FromQuery] RecordFilters filters, [FromQuery] string? search, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate) {
+        var items = await mediator.Send(new GetAllPaymentVouchersQuery { Filters = filters, Search = search, FromDate = fromDate, ToDate = toDate });
         return Ok(items);
     }
 

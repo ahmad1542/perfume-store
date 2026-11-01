@@ -1,4 +1,5 @@
-﻿using MediatR;
+using PerfumeStore.Domain.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PerfumeStore.Application.Expenses.Commands.CreateExpense;
 using PerfumeStore.Application.Expenses.Commands.DeleteExpense;
@@ -19,8 +20,8 @@ namespace PerfumeStore.API.Controllers {
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetAll([FromQuery] string? search, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate, [FromQuery] List<long>? expenseTypeIds) {
-            var expenses = await mediator.Send(new GetAllExpensesQuery {
+        public async Task<ActionResult<IEnumerable<ExpenseDto>>> GetAll([FromQuery] RecordFilters filters, [FromQuery] string? search, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate, [FromQuery] List<long>? expenseTypeIds) {
+            var expenses = await mediator.Send(new GetAllExpensesQuery { Filters = filters,
                 Search = search,
                 FromDate = fromDate,
                 ToDate = toDate,

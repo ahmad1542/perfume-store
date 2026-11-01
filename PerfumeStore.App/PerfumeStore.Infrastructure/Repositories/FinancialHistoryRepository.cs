@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using PerfumeStore.Application.FinancialHistory;
 using PerfumeStore.Infrastructure.Persistence;
+using PerfumeStore.Domain.Repositories;
 
 namespace PerfumeStore.Infrastructure.Repositories;
 
 public class FinancialHistoryRepository(PerfumeStoreDbContext db) : IFinancialHistoryService {
-    public async Task<FinancialHistoryDto> GetAsync(string kind, int year, int month, int? accountId, CancellationToken ct = default) {
+    public async Task<FinancialHistoryDto> GetAsync(string kind, int year, int month, int? accountId, CancellationToken ct = default, RecordFilters? filters = null) {
         var start = new DateTime(year, month, 1);
         var end = start.AddMonths(1);
         var accounts = await db.MoneyAccounts.AsNoTracking().ToListAsync(ct);
@@ -53,6 +54,17 @@ public class FinancialHistoryRepository(PerfumeStoreDbContext db) : IFinancialHi
         }
         result.ClosingBalance = balance;
         result.NetProfit = result.Revenue - result.Cost - result.Expenses;
+        result.FullRowCount = rows.Count;
+        // Compute the full running values BEFORE hiding rows. A filtered total
+        // must never replace the real closing balance or full monthly profit.
+        result.Rows = rows.Where(x => string.IsNullOrEmpty(filters?.SourceType) || x.SourceType == filters.SourceType)
+            .Where(x => filters?.CorrectionsOnly != true || x.IsCorrection).ToList();
+        result.MatchingMoneyIn = result.Rows.Where(x => x.CashChange > 0).Sum(x => x.CashChange);
+        result.MatchingMoneyOut = -result.Rows.Where(x => x.CashChange < 0).Sum(x => x.CashChange);
+        result.MatchingRevenue = result.Rows.Sum(x => x.RevenueChange);
+        result.MatchingCost = result.Rows.Sum(x => x.CostChange);
+        result.MatchingExpenses = result.Rows.Sum(x => x.ExpenseChange);
+        result.MatchingProfit = result.Rows.Sum(x => x.ProfitChange);
         return result;
     }
 }

@@ -1,0 +1,8 @@
+.record-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding:16px;margin:0 0 20px;border:1px solid #ffffff18;border-radius:14px;background:#ffffff04}
+.record-filters>.filter-field{display:flex;flex-direction:column;gap:6px;min-width:145px;max-width:260px;flex:1;color:#b9c6dc;font-size:.9rem;margin:0}
+.record-filters select,.record-filters input[type=number],.category-filter{color-scheme:dark;color:#e8eefc;background:#182232;border:1px solid #ffffff24;border-radius:10px;padding:10px;font:inherit;max-width:100%;min-height:44px}
+.record-filters select option{background:#141c2f;color:#e8eefc}.record-filters input[type=checkbox]{accent-color:#61dafb;width:17px;height:17px}
+.record-filters button{font:inherit;cursor:pointer;min-height:44px}.record-filters select:focus-visible,.record-filters input:focus-visible,.category-filter:focus-within{outline:2px solid #61dafb;outline-offset:2px}
+.category-filter{position:relative;min-width:170px}.category-filter summary{cursor:pointer}.category-filter[open]{z-index:4}.category-filter[open]>label{display:flex;align-items:center;gap:9px;padding:8px 0}.category-filter[open]{max-height:280px;overflow:auto}
+.filter-error{flex-basis:100%;color:#ff9baf;margin:0}.matching-summary{background:#182232;border:1px solid #61dafb33;border-radius:14px;padding:16px;margin:16px 0}.matching-summary p{margin:8px 0;color:#b9c6dc}.matching-summary strong{color:#e8eefc}
+@media(max-width:600px){.record-filters{padding:12px;gap:10px}.record-filters>.filter-field{min-width:130px;max-width:none}.record-filters button{width:100%}.category-filter{min-width:0}}

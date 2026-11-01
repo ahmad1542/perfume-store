@@ -1,10 +1,15 @@
 function setTableHeader() {
   const thead = $("tableHead");
   if (!thead) return;
-  thead.innerHTML = `<tr><th>#</th><th>Date</th><th>Supplier Name</th><th>AmountPaid</th><th>Debt Amount</th><th>Products Count</th><th style="text-align:right;">Actions</th></tr>`;
+  thead.innerHTML = `<tr><th>#</th><th>Date</th><th>Supplier Name</th><th>Invoice total</th><th>Paid on invoice</th><th>Debt Amount</th><th>Products Count</th><th style="text-align:right;">Actions</th></tr>`;
 }
 
 async function loadList(searchText = "") {
+  if (typeof RecordFilters !== 'undefined') {
+    try { await RecordFilters.ready; RecordFilters.restoreLegacy(); }
+    catch (error) { setMsg('pageMsg', error.message, true); return; }
+    searchText = $('searchInput')?.value ?? searchText;
+  }
   setTableHeader();
 
   const tbody = $("rows");
@@ -15,6 +20,8 @@ async function loadList(searchText = "") {
   const toDate = $("toDateInput")?.value?.trim() || "";
 
   if (!tbody) return;
+  const listRequest = TransactionList.begin();
+  if (listRequest === null) return;
 
   setMsg("pageMsg", "Loading...", false);
 
@@ -32,6 +39,7 @@ async function loadList(searchText = "") {
     params.append("toDate", toDate);
   }
 
+  if (typeof RecordFilters !== 'undefined') RecordFilters.append(params);
   const url = params.toString()
     ? `${API}?${params.toString()}`
     : API;
@@ -42,7 +50,10 @@ async function loadList(searchText = "") {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     list = Array.isArray(data) ? data : [];
+    if (!TransactionList.current(listRequest)) return;
+    TransactionList.render('PurchaseInvoices', list);
   } catch (e) {
+    if (!TransactionList.current(listRequest)) return;
     setMsg("pageMsg", "Failed to load data from API.", true);
     tbody.innerHTML = "";
     if (countChip) countChip.textContent = "0";
@@ -72,6 +83,7 @@ async function loadList(searchText = "") {
     const rawDate = x.date ?? x.Date ?? '';
     cells.push(escapeHtml(formatDateOnly(rawDate)));
     cells.push(escapeHtml((x.supplierName ?? x.SupplierName ?? x.supplier?.name ?? x.Supplier?.Name ?? '-')));
+    cells.push(escapeHtml(x.invoiceTotal ?? x.InvoiceTotal ?? 0));
     cells.push(escapeHtml(x.amountPaid ?? x.AmountPaid ?? 0));
     cells.push(escapeHtml((x.debtAmount ?? x.DebtAmount ?? x.debt?.amount ?? x.Debt?.Amount ?? 0)));
     cells.push(escapeHtml((x.productsCount ?? x.ProductsCount ?? 0)));

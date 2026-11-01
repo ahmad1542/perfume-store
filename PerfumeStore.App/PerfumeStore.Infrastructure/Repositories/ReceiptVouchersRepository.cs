@@ -77,7 +77,7 @@ public class ReceiptVouchersRepository(PerfumeStoreDbContext dbContext) : IRecei
         }
     }
 
-    public async Task<IEnumerable<ReceiptVoucher>> GetAllAsync(string? search = null) {
+    public async Task<IEnumerable<ReceiptVoucher>> GetAllAsync(string? search = null, DateTime? fromDate = null, DateTime? toDate = null, RecordFilters? filters = null) {
         IQueryable<ReceiptVoucher> query = dbContext.ReceiptVouchers
             .Include(x => x.Customer)
             .Include(x => x.Person)
@@ -100,7 +100,7 @@ public class ReceiptVouchersRepository(PerfumeStoreDbContext dbContext) : IRecei
             );
         }
 
-        return await query.OrderByDescending(x => x.Date).ThenByDescending(x => x.ID).ToListAsync();
+        return await query.Filter(filters).WithinDates(fromDate, toDate).OrderByDescending(x => x.Date).ThenByDescending(x => x.ID).ToListAsync();
     }
 
     public async Task<ReceiptVoucher?> GetByIdAsync(long id) {

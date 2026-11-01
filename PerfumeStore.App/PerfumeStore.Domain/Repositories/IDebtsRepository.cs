@@ -1,9 +1,9 @@
-﻿using PerfumeStore.Domain.Entities;
+using PerfumeStore.Domain.Entities;
 
 namespace PerfumeStore.Domain.Repositories {
     public interface IDebtsRepository {
         Task<Debt?> GetByIdAsync(int id);
-        Task<IEnumerable<Debt>> GetAllAsync(bool includeSettled, string? search = null);
+        Task<IEnumerable<Debt>> GetAllAsync(bool includeSettled, string? search = null, DateTime? fromDate = null, DateTime? toDate = null, RecordFilters? filters = null);
         Task<int> AddAsync(Debt debt);
         Task SoftDeleteAsync(Debt debt);
         Task SaveChangesAsync();

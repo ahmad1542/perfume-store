@@ -52,6 +52,59 @@ from the oldest estimated receipts. These reconstructed costs remain marked as
 estimated; a correction that exceeds a reconciled historical receipt requires
 correcting the inventory count or related invoices first.
 
+## Transaction lists and totals
+
+Expenses, sales invoices, purchase invoices, debts, receipt vouchers, payment
+vouchers, and money transactions open with the current calendar month selected
+(local first day through last day). Their first request includes those dates;
+the database filters before loading the records. Edit From/To, choose This month,
+or choose All dates to inspect older records. Searches and other filters remain
+active when the period changes. The end date includes its entire day.
+
+Every list shows totals at the bottom for exactly its loaded records, including
+zero totals for an empty result. Expense totals also break down by expense type.
+Invoice totals use saved line prices, independently of payments and remaining
+debt. "Paid on invoices" excludes later vouchers. Debts show loaded amounts plus
+separate open receivable/payable totals; the date filter uses the debt date, so
+choose All dates to see older unpaid debts. Transfers show the total transferred,
+not income or profit. Money Accounts shows the combined loaded account balance
+without a monthly filter. Catalog pages continue to show all records.
+
+Totals are cleared while loading or on failure, and stale responses cannot
+overwrite a later filter selection. Existing accounting rules are unchanged.
+List API date parameters are optional for existing callers; create-form lookups
+and open-invoice/debt selectors are not restricted to the current month.
+
+### Advanced filters
+
+- Sales/purchase lists filter by multiple product categories, brand, product,
+  and customer/supplier. All product conditions must match the **same line**.
+  Matching invoices keep their complete invoice total, paid amount, and debt;
+  a separate **Matching products only** total sums just the selected lines.
+- Expenses add an account filter. Debts add party type, party, direction, and
+  open/settled/all status. Receipts add customer/person, party, account, and linked
+  sales invoice number. Payments add supplier, account, and linked purchase
+  invoice number. Transfers add source and destination accounts.
+- Inventory filters by brand, categories, and in-stock/out-of-stock/low-stock.
+  Low stock retains the existing at-or-below-minimum definition.
+- Clear filters restores defaults, including the current month and open debts.
+  All dates remains available separately. Filter values are reflected in the URL;
+  returning from View/Edit/Create restores the previous list through tab-session
+  state. A fresh visit without explicit filters continues to default to this month.
+- Cash history filters transaction type; profit history filters sales, expenses,
+  debt collections/payments, and corrections only. Corrections means tracked
+  edits or deletions; unknown historical edits cannot be recovered.
+  Full month/account summary cards and running values are calculated before rows
+  are hidden. A separate matching-transactions summary shows partial totals and
+  never replaces the full closing balance or monthly profit.
+- The brand chart offers Top 5 (default), Top 10, and All brands with sales in the
+  selected month. Expanded views use horizontal rows and scrolling; long names
+  are shortened on the axis and remain complete in tooltips.
+
+These features only filter/read existing records and do not change financial
+rules or require a database migration. Open-invoice selectors in voucher creation
+continue to include older debts.
+
 ## Cash and profit history
 
 Open **Cash History** or **Profit History** in the dashboard's Finance section.

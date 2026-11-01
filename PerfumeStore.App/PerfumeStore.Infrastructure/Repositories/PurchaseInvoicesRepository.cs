@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PerfumeStore.Domain.Entities;
 using PerfumeStore.Domain.Exceptions;
 using PerfumeStore.Domain.Repositories;
@@ -45,12 +45,12 @@ namespace PerfumeStore.Infrastructure.Repositories {
             }
         }
 
-        public async Task<IEnumerable<PurchaseInvoice>> GetAllAsync(string? search = null, DateTime? fromDate = null, DateTime? toDate = null) {
+        public async Task<IEnumerable<PurchaseInvoice>> GetAllAsync(string? search = null, DateTime? fromDate = null, DateTime? toDate = null, RecordFilters? filters = null) {
             IQueryable<PurchaseInvoice> query = dbContext.PurchaseInvoices
                 .Include(p => p.Supplier)
                 .Include(p => p.Debt)
                 .Include(p => p.PaymentVoucherPurchaseInvoices)
-                .Include(p => p.PurchaseInvoiceItems);
+                .Include(p => p.PurchaseInvoiceItems).ThenInclude(i => i.Product);
 
             if (fromDate.HasValue) {
                 var from = fromDate.Value.Date;
@@ -79,7 +79,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 );
             }
 
-            return await query.ToListAsync();
+            return await query.Filter(filters).ToListAsync();
         }
 
         public async Task<PurchaseInvoice?> GetByIdAsync(long id) {

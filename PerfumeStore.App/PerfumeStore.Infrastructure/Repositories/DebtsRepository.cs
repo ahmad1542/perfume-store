@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PerfumeStore.Domain.Entities;
 using PerfumeStore.Domain.Repositories;
 using PerfumeStore.Infrastructure.Persistence;
@@ -12,13 +12,13 @@ namespace PerfumeStore.Infrastructure.Repositories {
             return debt.Id;
         }
 
-        public async Task<IEnumerable<Debt>> GetAllAsync(bool includeSettled, string? search = null) {
+        public async Task<IEnumerable<Debt>> GetAllAsync(bool includeSettled, string? search = null, DateTime? fromDate = null, DateTime? toDate = null, RecordFilters? filters = null) {
             IQueryable<Debt> query = dbContext.Debts
                 .Include(d => d.Person)
                 .Include(d => d.PurchaseInvoice)
                 .Include(d => d.SalesInvoice);
 
-            if (!includeSettled)
+            if (!includeSettled && filters?.Status is not ("all" or "settled"))
                 query = query.Where(d => !d.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(search)) {
@@ -35,7 +35,7 @@ namespace PerfumeStore.Infrastructure.Repositories {
                 );
             }
 
-            return await query.ToListAsync();
+            return await query.Filter(filters, dbContext).WithinDates(fromDate, toDate).ToListAsync();
         }
 
         public async Task<Debt?> GetByIdAsync(int id) {

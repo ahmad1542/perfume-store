@@ -23,10 +23,19 @@ function renderHistory(data) {
   $('reconciliationWarning').hidden = !cashHistory || !data.balanceDifference;
   $('reconciliationWarning').textContent = `The saved account balance differs from recorded history by ${historyMoney(data.balanceDifference)}. Review the account before relying on these totals.`;
   const stats = cashHistory
-    ? [['Opening balance', data.openingBalance], ['Money in', data.moneyIn], ['Money out', data.moneyOut], ['Closing balance', data.closingBalance]]
-    : [['Sales revenue', data.revenue], ['Cost of goods sold', data.cost], ['Expenses', data.expenses], ['Net profit', data.netProfit]];
+    ? [['Opening balance (whole month)', data.openingBalance], ['Money in (whole month)', data.moneyIn], ['Money out (whole month)', data.moneyOut], ['Closing balance (whole month)', data.closingBalance]]
+    : [['Sales revenue (whole month)', data.revenue], ['Cost of goods sold (whole month)', data.cost], ['Expenses (whole month)', data.expenses], ['Net profit (whole month)', data.netProfit]];
   $('summary').innerHTML = stats.map(([label, value]) => `<div class="stat"><span>${label}</span><strong class="${Number(value) < 0 ? 'negative' : ''}">${historyMoney(value)}</strong></div>`).join('');
-  $('caption').textContent = `${data.monthLabel} • ${data.rows.length} entries • Oldest first`;
+  $('caption').textContent = `${data.monthLabel} • ${data.rows.length} of ${data.fullRowCount ?? data.rows.length} entries • Oldest first`;
+  const matching = $('matchingSummary');
+  if (matching) {
+    const filtered = typeof RecordFilters !== 'undefined' && (RecordFilters.value('sourceType') || RecordFilters.value('correctionsOnly'));
+    matching.hidden = !filtered;
+    const sums = cashHistory
+      ? `Matching money in: ${historyMoney(data.matchingMoneyIn)} · Matching money out: ${historyMoney(data.matchingMoneyOut)}`
+      : `Matching revenue: ${historyMoney(data.matchingRevenue)} · Matching cost: ${historyMoney(data.matchingCost)} · Matching expenses: ${historyMoney(data.matchingExpenses)} · Matching profit change: ${historyMoney(data.matchingProfit)}`;
+    matching.innerHTML = `<strong>Matching transactions only</strong><p>${escapeHtml(sums)}</p><p>These are partial totals. The cards above and running values include hidden transactions and show the full month for the selected account(s).</p>`;
+  }
   $('balanceNote').textContent = cashHistory
     ? `Opening balance + money in − money out = closing balance for this month. Current saved balance: ${historyMoney(data.currentAccountBalance)}. Transfers appear on both accounts and do not change combined cash.`
     : 'Revenue − cost of goods sold − expenses = net profit. Debt collections are shown for context with zero profit impact. Profit corrections affect the original sale or expense month.';
@@ -51,10 +60,15 @@ function renderHistory(data) {
 }
 
 async function loadHistory() {
+  if (typeof RecordFilters !== 'undefined') {
+    try { await RecordFilters.ready; }
+    catch (error) { $('message').textContent=error.message; return; }
+  }
   const request = ++historyRequest;
   $('message').textContent = 'Loading history…'; $('message').className = '';
   const params = new URLSearchParams({ year: $('year').value, month: $('month').value });
   if (cashHistory && $('account').value) params.set('accountId', $('account').value);
+  if (typeof RecordFilters !== 'undefined') RecordFilters.append(params);
   const navigation = new URLSearchParams(params); navigation.delete('accountId');
   $('cashTab').href = `?kind=cash&${navigation}`; $('profitTab').href = `?kind=profit&${navigation}`;
   const address = new URLSearchParams(params); address.set('kind', historyKind);
@@ -66,6 +80,7 @@ async function loadHistory() {
   } catch (error) {
     if (request !== historyRequest) return;
     $('summary').innerHTML = ''; $('rows').innerHTML = ''; $('balanceNote').textContent = '';
+    if ($('matchingSummary')) $('matchingSummary').hidden = true;
     $('message').className = 'error'; $('message').textContent = 'Could not load history. ' + (getValidationMessageFromHttpError(error) || 'Please try again.');
   }
 }

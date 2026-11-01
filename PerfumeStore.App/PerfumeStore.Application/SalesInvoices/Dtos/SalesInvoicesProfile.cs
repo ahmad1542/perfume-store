@@ -8,6 +8,8 @@ namespace PerfumeStore.Application.SalesInvoices.Dtos {
     public class SalesInvoicesProfile : Profile {
         public SalesInvoicesProfile() {
             CreateMap<SalesInvoice, SalesInvoiceDto>()
+                .ForMember(d => d.MatchingProductsTotal, opt => opt.Ignore())
+                .ForMember(d => d.InvoiceTotal, opt => opt.MapFrom(s => s.SalesInvoiceItems.Sum(i => i.Quantity * (i.UnitPrice ?? i.Product.SalePrice))))
                 .ForMember(d => d.CustomerName, opt => opt.MapFrom(s => s.Customer != null ? s.Customer.Name : null))
                 .ForMember(d => d.DebtAmount, opt => opt.MapFrom(s => s.Debt != null && !s.Debt.IsDeleted ? s.Debt.Amount : 0))
                 .ForMember(d => d.ProductsCount, opt => opt.MapFrom(s => s.SalesInvoiceItems != null ? s.SalesInvoiceItems.Count : 0))

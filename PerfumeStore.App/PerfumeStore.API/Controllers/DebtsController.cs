@@ -1,4 +1,5 @@
-﻿using MediatR;
+using PerfumeStore.Domain.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PerfumeStore.Application.Debts.Commands.CreateDebt;
 using PerfumeStore.Application.Debts.Commands.UpdateDebt;
@@ -18,8 +19,8 @@ namespace PerfumeStore.API.Controllers {
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DebtDto>>> GetAll([FromQuery] string? search, [FromQuery] bool includeSettled= false) {
-            var debts = await mediator.Send(new GetAllDebtsQuery(search, includeSettled));
+        public async Task<ActionResult<IEnumerable<DebtDto>>> GetAll([FromQuery] RecordFilters filters, [FromQuery] string? search, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate, [FromQuery] bool includeSettled= false) {
+            var debts = await mediator.Send(new GetAllDebtsQuery(search, includeSettled) { Filters = filters, FromDate = fromDate, ToDate = toDate });
             return Ok(debts);
         }
 

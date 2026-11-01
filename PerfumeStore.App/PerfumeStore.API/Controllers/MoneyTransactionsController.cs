@@ -1,4 +1,5 @@
-﻿using MediatR;
+using PerfumeStore.Domain.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PerfumeStore.Application.MoneyTransactions.Commands.CreateMoneyTransaction;
 using PerfumeStore.Application.MoneyTransactions.Commands.UpdateMoneyTransaction;
@@ -19,8 +20,8 @@ namespace PerfumeStore.API.Controllers {
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MoneyTransactionDto>>> GetAll([FromQuery] string? search) {
-            var moneyAccounts = await mediator.Send(new GetAllMoneyTransactionsQuery(search));
+        public async Task<ActionResult<IEnumerable<MoneyTransactionDto>>> GetAll([FromQuery] RecordFilters filters, [FromQuery] string? search, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate) {
+            var moneyAccounts = await mediator.Send(new GetAllMoneyTransactionsQuery(search) { Filters = filters, FromDate = fromDate, ToDate = toDate });
             return Ok(moneyAccounts);
         }
 

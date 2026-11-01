@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PerfumeStore.Domain.Entities;
 using PerfumeStore.Domain.Repositories;
 using PerfumeStore.Infrastructure.Persistence;
@@ -11,12 +11,12 @@ namespace PerfumeStore.Infrastructure.Repositories {
             return moneyTransaction.ID;
         }
 
-        public async Task<IEnumerable<MoneyTransaction>> GetAllAsync(string? search = null) {
+        public async Task<IEnumerable<MoneyTransaction>> GetAllAsync(string? search = null, DateTime? fromDate = null, DateTime? toDate = null, RecordFilters? filters = null) {
             IQueryable<MoneyTransaction> query = dbContext.MoneyTransactions.Include(e => e.FromMoneyAccount).Include(e => e.ToMoneyAccount);
             if (!string.IsNullOrWhiteSpace(search)) {
                 query = query.Where(c => c.FromMoneyAccount.AccountName.Contains(search));
             }
-            return await query.ToListAsync();
+            return await query.Filter(filters).WithinDates(fromDate, toDate).ToListAsync();
         }
 
         public async Task<MoneyTransaction?> GetByIdAsync(long id) {

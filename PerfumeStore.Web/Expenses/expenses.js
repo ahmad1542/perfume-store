@@ -5,6 +5,11 @@ function setTableHeader() {
 }
 
 async function loadList(searchText = "") {
+  if (typeof RecordFilters !== 'undefined') {
+    try { await RecordFilters.ready; RecordFilters.restoreLegacy(); }
+    catch (error) { setMsg('pageMsg', error.message, true); return; }
+    searchText = $('searchInput')?.value ?? searchText;
+  }
   setTableHeader();
 
   const tbody = $("rows");
@@ -17,6 +22,8 @@ async function loadList(searchText = "") {
   const totalExpenseTypeCheckboxes = document.querySelectorAll('.expense-type-filter-checkbox').length;
 
   if (!tbody) return;
+  const listRequest = TransactionList.begin();
+  if (listRequest === null) return;
 
   setMsg("pageMsg", "Loading...", false);
 
@@ -26,6 +33,8 @@ async function loadList(searchText = "") {
   if (toDate) params.append('toDate', toDate);
 
   if (totalExpenseTypeCheckboxes > 0 && selectedExpenseTypeIds.length === 0) {
+    if (typeof RecordFilters !== 'undefined') RecordFilters.append(params);
+    TransactionList.render('Expenses', []);
     setMsg("pageMsg", "No expense types are selected.", false);
     tbody.innerHTML = "";
     if (countChip) countChip.textContent = "0";
@@ -36,13 +45,17 @@ async function loadList(searchText = "") {
 
   selectedExpenseTypeIds.forEach(id => params.append('expenseTypeIds', id));
 
+  if (typeof RecordFilters !== 'undefined') RecordFilters.append(params);
   const url = params.toString() ? `${API}?${params.toString()}` : API;
 
   let list = [];
   try {
     list = await apiGetJson(url);
     list = Array.isArray(list) ? list : [];
+    if (!TransactionList.current(listRequest)) return;
+    TransactionList.render('Expenses', list);
   } catch (e) {
+    if (!TransactionList.current(listRequest)) return;
     setMsg("pageMsg", "Failed to load data from API.", true);
     tbody.innerHTML = "";
     if (countChip) countChip.textContent = "0";

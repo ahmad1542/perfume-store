@@ -1,4 +1,4 @@
-﻿using PerfumeStore.Domain.Entities;
+using PerfumeStore.Domain.Entities;
 
 namespace PerfumeStore.Application.SalesInvoices.Dtos {
     public class SalesInvoiceDto {
@@ -11,6 +11,8 @@ namespace PerfumeStore.Application.SalesInvoices.Dtos {
         public string? CustomerName { get; set; }
 
         public decimal AmountPaid { get; set; }
+        public decimal InvoiceTotal { get; set; }
+        public decimal? MatchingProductsTotal { get; set; }
 
         public decimal? DebtAmount { get; set; }
 

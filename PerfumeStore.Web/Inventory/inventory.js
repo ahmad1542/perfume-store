@@ -1,6 +1,12 @@
-const lowStockOnly = getQueryParam("lowStock") === "true";
+let lowStockOnly = getQueryParam("lowStock") === "true";
 
 function setTableHeader() {
+  if (!lowStockOnly && typeof RecordFilters !== 'undefined') {
+    $('inventoryTitle').textContent = 'Inventory'; $('inventorySubtitle').textContent = 'Manage inventory here.';
+    $('stockFilterLink').textContent = 'Low stock only'; $('stockFilterLink').href = 'index.html?lowStock=true';
+    $('emptyTitle').textContent = 'No inventory matches these filters'; $('emptyDescription').textContent = 'Change the filters or search.'; $('emptyCreate').hidden = false;
+    $('lowStockSummary').hidden = true;
+  }
   if (lowStockOnly) {
     $("inventoryTitle").textContent = "Low stock items";
     $("inventorySubtitle").textContent = "Items at or below their minimum stock. Stock levels are live.";
@@ -16,6 +22,12 @@ function setTableHeader() {
 }
 
 async function loadList(searchText = "") {
+  if (typeof RecordFilters !== 'undefined') {
+    try { await RecordFilters.ready; RecordFilters.restoreLegacy(); }
+    catch (error) { setMsg('pageMsg', error.message, true); return; }
+    lowStockOnly = RecordFilters.value('stockStatus') === 'low-stock';
+    searchText = $('searchInput')?.value ?? searchText;
+  }
   setTableHeader();
 
   const tbody = $("rows");
@@ -24,10 +36,11 @@ async function loadList(searchText = "") {
   const countChip = $("countChip");
 
   if (!tbody) return;
+  const listRequest = typeof TransactionList !== 'undefined' ? TransactionList.begin() : 0;
 
   setMsg("pageMsg", "Loading...", false);
 
-  const url =
+  const url = typeof TransactionList !== 'undefined' ? TransactionList.url(API, searchText) :
     searchText && searchText.trim().length > 0
       ? `${API}?search=${encodeURIComponent(searchText.trim())}`
       : API;
@@ -38,6 +51,7 @@ async function loadList(searchText = "") {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     list = Array.isArray(data) ? data : [];
+    if (typeof TransactionList !== 'undefined' && !TransactionList.current(listRequest)) return;
     if (lowStockOnly) list = list.filter(x => x.minStock != null && Number(x.quantity) <= Number(x.minStock));
     if (lowStockOnly) {
       const outOfStock = list.filter(x => Number(x.quantity) === 0).length;
@@ -45,6 +59,7 @@ async function loadList(searchText = "") {
       $("lowStockSummary").hidden = false;
     }
   } catch (e) {
+    if (typeof TransactionList !== 'undefined' && !TransactionList.current(listRequest)) return;
     setMsg("pageMsg", "Failed to load data from API.", true);
     if (lowStockOnly) $("lowStockSummary").hidden = true;
     tbody.innerHTML = "";

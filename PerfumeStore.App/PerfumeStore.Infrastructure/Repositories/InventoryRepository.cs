@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PerfumeStore.Domain.Entities;
 using PerfumeStore.Domain.Exceptions;
 using PerfumeStore.Domain.Repositories;
@@ -41,12 +41,12 @@ namespace PerfumeStore.Infrastructure.Repositories {
             });
         }
 
-        public async Task<IEnumerable<Inventory>> GetAllAsync(string? search = null) {
+        public async Task<IEnumerable<Inventory>> GetAllAsync(string? search = null, RecordFilters? filters = null) {
             IQueryable<Inventory> query = dbContext.Inventory.Include(c => c.Product).ThenInclude(p => p.InventoryBatches);
             if (!string.IsNullOrWhiteSpace(search)) {
                 query = query.Where(c => c.Product.Name.Contains(search));
             }
-            return await query.ToListAsync();
+            return await query.Filter(filters).ToListAsync();
         }
 
         public async Task<Inventory?> GetByIdAsync(int id) {

@@ -5,6 +5,11 @@ function setTableHeader() {
 }
 
 async function loadList(searchText = '') {
+  if (typeof RecordFilters !== 'undefined') {
+    try { await RecordFilters.ready; RecordFilters.restoreLegacy(); }
+    catch (error) { setMsg('pageMsg', error.message, true); return; }
+    searchText = $('searchInput')?.value ?? searchText;
+  }
   setTableHeader();
 
   const tbody = $('rows');
@@ -13,15 +18,20 @@ async function loadList(searchText = '') {
   const countChip = $('countChip');
 
   if (!tbody) return;
+  const listRequest = TransactionList.begin();
+  if (listRequest === null) return;
 
   setMsg('pageMsg', 'Loading...', false);
 
-  const params = new URLSearchParams();
+  const params = TransactionList.addDates(new URLSearchParams());
   if (searchText && searchText.trim().length > 0) params.append('search', searchText.trim());
+  if (typeof RecordFilters !== 'undefined') RecordFilters.append(params);
 
   try {
     const list = await apiGetJson(params.toString() ? `${API}?${params.toString()}` : API);
     const items = Array.isArray(list) ? list : [];
+    if (!TransactionList.current(listRequest)) return;
+    TransactionList.render('ReceiptVouchers', items);
 
     tbody.innerHTML = '';
     if (countChip) countChip.textContent = items.length;
@@ -65,10 +75,11 @@ async function loadList(searchText = '') {
 
     setMsg('pageMsg', '', false);
   } catch (e) {
+    if (!TransactionList.current(listRequest)) return;
+    tbody.innerHTML = '';
+    if (countChip) countChip.textContent = '0';
     if (emptyState) emptyState.style.display = 'none';
     if (tableCard) tableCard.style.display = 'none';
     setMsg('pageMsg', getFriendlyMessage(e), true);
   }
 }
-
-document.getElementById('searchInput')?.addEventListener('input', e => loadList(e.target.value));

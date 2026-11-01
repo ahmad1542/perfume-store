@@ -1,4 +1,5 @@
-﻿using MediatR;
+using PerfumeStore.Domain.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PerfumeStore.Application.Inventory.Commands.CreateInventory;
 using PerfumeStore.Application.Inventory.Commands.UpdateInventory;
@@ -17,8 +18,8 @@ namespace PerfumeStore.API.Controllers {
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(string? search) {
-            var inventories = await mediator.Send(new GetAllInventoryQuery(search));
+        public async Task<IActionResult> GetAll([FromQuery] RecordFilters filters, string? search) {
+            var inventories = await mediator.Send(new GetAllInventoryQuery(search) { Filters = filters });
             return Ok(inventories);
         }
 

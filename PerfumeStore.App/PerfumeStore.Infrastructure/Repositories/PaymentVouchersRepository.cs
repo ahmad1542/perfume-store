@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PerfumeStore.Domain.Entities;
 using PerfumeStore.Domain.Repositories;
 using PerfumeStore.Infrastructure.Persistence;
@@ -56,7 +56,7 @@ public class PaymentVouchersRepository(PerfumeStoreDbContext dbContext) : IPayme
         }
     }
 
-    public async Task<IEnumerable<PaymentVoucher>> GetAllAsync(string? search = null) {
+    public async Task<IEnumerable<PaymentVoucher>> GetAllAsync(string? search = null, DateTime? fromDate = null, DateTime? toDate = null, RecordFilters? filters = null) {
         IQueryable<PaymentVoucher> query = dbContext.PaymentVouchers
             .Include(x => x.Supplier)
             .Include(x => x.MoneyAccount)
@@ -76,7 +76,7 @@ public class PaymentVouchersRepository(PerfumeStoreDbContext dbContext) : IPayme
             );
         }
 
-        return await query.OrderByDescending(x => x.Date).ThenByDescending(x => x.ID).ToListAsync();
+        return await query.Filter(filters).WithinDates(fromDate, toDate).OrderByDescending(x => x.Date).ThenByDescending(x => x.ID).ToListAsync();
     }
 
     public async Task<PaymentVoucher?> GetByIdAsync(long id) {

@@ -165,8 +165,8 @@
                 </div>
                 <div class="col-12 col-lg-6">
                     <section class="cardx dashboard-panel h-100">
-                        <div class="card-headerx"><h2>Sales &amp; Profit by Brand</h2><span class="chip">Top 5</span></div>
-                        <div class="card-bodyx"><p class="chart-caption">Sales revenue and gross profit (sales minus FIFO cost) in the selected month.</p><div class="chart-frame chart-frame-small"><canvas id="brandChart" aria-label="Sales revenue and FIFO gross profit by brand" role="img"></canvas></div></div>
+                        <div class="card-headerx"><h2>Sales &amp; Profit by Brand</h2><label class="chip">Show <select id="brandLimit" class="period-select" aria-label="Brand chart limit"><option value="5">Top 5</option><option value="10">Top 10</option><option value="0">All brands</option></select></label></div>
+                        <div class="card-bodyx"><p class="chart-caption">Brands with sales in the selected month. Gross profit is sales minus FIFO cost.</p><div style="max-height:600px;overflow-y:auto"><div id="brandChartFrame" class="chart-frame chart-frame-small"><canvas id="brandChart" aria-label="Sales revenue and FIFO gross profit by brand" role="img"></canvas></div></div></div>
                     </section>
                 </div>
                 <div class="col-12 col-lg-6">
@@ -216,7 +216,7 @@
     <script src="../assets/common.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="dashboard.js?v=20261019-history"></script>
+    <script src="dashboard.js?v=20261101-brands"></script>
 </body>
 
 </html>

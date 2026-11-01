@@ -1,10 +1,17 @@
 namespace PerfumeStore.Application.FinancialHistory;
 
 public interface IFinancialHistoryService {
-    Task<FinancialHistoryDto> GetAsync(string kind, int year, int month, int? accountId, CancellationToken ct = default);
+    Task<FinancialHistoryDto> GetAsync(string kind, int year, int month, int? accountId, CancellationToken ct = default, PerfumeStore.Domain.Repositories.RecordFilters? filters = null);
 }
 
 public class FinancialHistoryDto {
+    public int FullRowCount { get; set; }
+    public decimal MatchingMoneyIn { get; set; }
+    public decimal MatchingMoneyOut { get; set; }
+    public decimal MatchingRevenue { get; set; }
+    public decimal MatchingCost { get; set; }
+    public decimal MatchingExpenses { get; set; }
+    public decimal MatchingProfit { get; set; }
     public string Kind { get; set; } = "";
     public string MonthLabel { get; set; } = "";
     public decimal OpeningBalance { get; set; }
@@ -22,6 +29,7 @@ public class FinancialHistoryDto {
 }
 
 public class FinancialHistoryRowDto {
+    public bool IsCorrection => Description.StartsWith("Corrected:") || Description.StartsWith("Deleted:");
     public bool IsSourceDeleted { get; set; }
     public DateTime Date { get; set; }
     public DateTime RecordedAt { get; set; }

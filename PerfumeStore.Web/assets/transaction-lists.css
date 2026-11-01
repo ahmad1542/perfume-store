@@ -1,0 +1,17 @@
+.list-period{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0 0 20px;padding:16px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.025)}
+.list-period label{display:flex;flex-direction:column;gap:6px;color:#b9c6dc;font-size:.9rem;margin:0}
+.list-period input.search-input{width:175px;color-scheme:dark}
+.list-period button{font:inherit;cursor:pointer;white-space:nowrap}
+.list-period-note{flex-basis:100%;color:#a7b5d0;font-size:.85rem;margin:0}
+.list-totals{margin-top:20px;padding:20px;background:#181f2c;border:1px solid rgba(255,255,255,.1);border-radius:16px}
+.list-totals[hidden]{display:none!important}
+.list-totals h2{font-size:1.1rem;margin:0 0 8px;font-weight:800;color:#e8eefc}
+.list-totals-caption{color:#a7b5d0;font-size:.85rem;margin:8px 0 14px}
+.list-totals-grid{display:flex;gap:14px;flex-wrap:wrap}
+.list-total{flex:1;min-width:170px;padding:14px;border-radius:12px;background:rgba(255,255,255,.035)}
+.list-total span{display:block;color:#b9c6dc;font-size:.9rem}
+.list-total strong{display:block;margin-top:8px;font-size:1.45rem;color:#e8eefc;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.list-totals-breakdown{margin-top:16px;border-top:1px solid rgba(255,255,255,.1);padding-top:8px}
+.list-totals-breakdown p{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:8px 0;color:#b9c6dc}
+.list-totals-breakdown strong{color:#e8eefc;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.list-period{gap:10px}.list-period label{flex:1;min-width:125px}.list-period input.search-input{width:100%}.list-totals{padding:16px}.list-total{min-width:130px}.list-total strong{font-size:1.25rem}}

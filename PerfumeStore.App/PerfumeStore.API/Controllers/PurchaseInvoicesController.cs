@@ -1,4 +1,5 @@
-﻿using MediatR;
+using PerfumeStore.Domain.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PerfumeStore.Application.PurchaseInvoices.Commands.CreatePurchaseInvoice;
 using PerfumeStore.Application.PurchaseInvoices.Commands.UpdatePurchaseInvoice;
@@ -19,11 +20,11 @@ namespace PerfumeStore.API.Controllers {
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PurchaseInvoiceDto>>> GetAll(
+        public async Task<ActionResult<IEnumerable<PurchaseInvoiceDto>>> GetAll([FromQuery] RecordFilters filters,
             [FromQuery] string? search,
             [FromQuery] DateTime? fromDate,
             [FromQuery] DateTime? toDate) {
-            var purchaseInvoices = await mediator.Send(new GetAllPurchaseinvoicesQuery {
+            var purchaseInvoices = await mediator.Send(new GetAllPurchaseinvoicesQuery { Filters = filters,
                 Search = search,
                 FromDate = fromDate,
                 ToDate = toDate

@@ -11,6 +11,8 @@
 
   <link rel="stylesheet" href="../assets/theme-dark.css?v=20261009-dropdowns" />
   <link rel="stylesheet" href="moneyaccounts.css" />
+  <link rel="stylesheet" href="../assets/transaction-lists.css?v=20261031">
+  <link rel="stylesheet" href="../assets/record-filters.css?v=20261101">
 </head>
 
 <body>
@@ -42,6 +44,7 @@
         </div>
       </div>
 
+      <div id="advancedFilters" class="record-filters" aria-label="Record filters"></div>
       <div id="emptyState" class="empty-state">
         <div class="empty-icon">📄</div>
         <h2>No money accounts yet</h2>
@@ -57,14 +60,17 @@
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <section id="listTotals" class="list-totals" aria-live="polite" hidden></section>
     </div>
   </main>
 
   <script src="../assets/api-config.js"></script>
   <script src="../assets/endpoints.js"></script>
   <script src="../assets/common.js"></script>
-  <script src="common.js"></script>
-  <script src="moneyaccounts.js?v=20261019-history"></script>
+  <script src="../assets/record-filters.js?v=20261101"></script>
+  <script src="../assets/transaction-lists.js?v=20261101-filters"></script>
+  <script src="common.js?v=20261031-lists"></script>
+  <script src="moneyaccounts.js?v=20261101-filters"></script>
   <script>loadList();</script>
 </body>
 

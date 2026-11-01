@@ -5,6 +5,11 @@ function setTableHeader() {
 }
 
 async function loadList(searchText = "") {
+  if (typeof RecordFilters !== 'undefined') {
+    try { await RecordFilters.ready; RecordFilters.restoreLegacy(); }
+    catch (error) { setMsg('pageMsg', error.message, true); return; }
+    searchText = $('searchInput')?.value ?? searchText;
+  }
   setTableHeader();
 
   const tbody = $("rows");
@@ -13,13 +18,12 @@ async function loadList(searchText = "") {
   const countChip = $("countChip");
 
   if (!tbody) return;
+  const listRequest = TransactionList.begin();
+  if (listRequest === null) return;
 
   setMsg("pageMsg", "Loading...", false);
 
-  const url =
-    searchText && searchText.trim().length > 0
-      ? `${API}?search=${encodeURIComponent(searchText.trim())}`
-      : API;
+  const url = TransactionList.url(API, searchText);
 
   let list = [];
   try {
@@ -27,7 +31,10 @@ async function loadList(searchText = "") {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     list = Array.isArray(data) ? data : [];
+    if (!TransactionList.current(listRequest)) return;
+    TransactionList.render('MoneyAccounts', list);
   } catch (e) {
+    if (!TransactionList.current(listRequest)) return;
     setMsg("pageMsg", "Failed to load data from API.", true);
     tbody.innerHTML = "";
     if (countChip) countChip.textContent = "0";

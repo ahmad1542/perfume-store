@@ -11,6 +11,8 @@ namespace PerfumeStore.Application.PurchaseInvoices.Dtos {
     public class PurchaseInvoicesProfile : Profile {
         public PurchaseInvoicesProfile() {
             CreateMap<PurchaseInvoice, PurchaseInvoiceDto>()
+                .ForMember(d => d.MatchingProductsTotal, opt => opt.Ignore())
+                .ForMember(d => d.InvoiceTotal, opt => opt.MapFrom(s => s.PurchaseInvoiceItems.Sum(i => i.Quantity * (i.UnitCost ?? i.Product.CostPrice))))
                 .ForMember(d => d.SupplierName, opt => opt.MapFrom(s => s.Supplier != null ? s.Supplier.Name : null))
                 .ForMember(d => d.DebtAmount, opt => opt.MapFrom(s => s.Debt != null ? s.Debt.Amount : 0))
                 .ForMember(d => d.ProductsCount, opt => opt.MapFrom(s => s.PurchaseInvoiceItems != null ? s.PurchaseInvoiceItems.Count : 0));
